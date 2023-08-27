@@ -4,9 +4,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 
+# ffmpeg
+COPY --link --from=mwader/static-ffmpeg:6.0 /ffmpeg /usr/local/bin/
+COPY --link --from=mwader/static-ffmpeg:6.0 /ffprobe /usr/local/bin/
+
 # Install requirements
 COPY ./whisperX/requirements.txt .
-RUN python3 -m pip install --no-cache-dir -r ./requirements.txt ujson
+RUN python3 -m pip install --no-cache-dir -r ./requirements.txt ujson torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2
 
 # Preload fast-whisper
 ARG WHISPER_MODEL=base
