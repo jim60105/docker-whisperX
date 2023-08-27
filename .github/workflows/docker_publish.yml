@@ -23,6 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
+      max-parallel: 1 # only one job at a time
       matrix:
         lang: ["en", "ja"]
         model: [
@@ -32,6 +33,14 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
