@@ -46,7 +46,7 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }},ghcr.io/${{ github.repository }}
           flavor: |
-            latest=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            latest=${{ matrix.model == 'base' && matrix.lang == 'en' }}
             prefix=
             suffix=
           tags: |
