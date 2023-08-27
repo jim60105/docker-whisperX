@@ -30,14 +30,14 @@ RUN python load_align_model.py ${LANG}
 FROM base AS final
 
 # Install whisperX
-COPY --link ./whisperX/ .
+COPY ./whisperX/ .
 RUN python3 -m pip install --no-cache-dir .
 
 # Non-root user
 RUN useradd -m -s /bin/bash appuser
 USER appuser
 
-COPY --link --chown=appuser --from=load_model /cache /cache
+COPY --chown=appuser --from=load_model /cache /cache
 
 ARG WHISPER_MODEL
 ENV WHISPER_MODEL=${WHISPER_MODEL}
