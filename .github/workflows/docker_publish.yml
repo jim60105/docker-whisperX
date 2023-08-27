@@ -51,7 +51,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }},ghcr.io/${{ github.repository }}
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/whisperx,ghcr.io/${{ github.repository_owner }}/whisperx
           flavor: |
             latest=true
             prefix=
@@ -160,7 +160,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }},ghcr.io/${{ github.repository }}
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/whisperx,ghcr.io/${{ github.repository_owner }}/whisperx
           flavor: |
             latest=false
             prefix=
