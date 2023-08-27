@@ -132,6 +132,7 @@ jobs:
           - small
           - medium
           - large-v2
+    needs: docker-no_model # wait for docker-no_model to finish
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
