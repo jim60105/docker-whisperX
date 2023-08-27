@@ -2,3 +2,4 @@
 **/*.md
 **.git*
 **Dockerfile*
+**.vscode
