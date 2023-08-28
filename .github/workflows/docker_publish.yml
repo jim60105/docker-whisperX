@@ -1,3 +1,7 @@
+# !!!
+# Notice: This workflow cannot be executed on the free runner due to insufficient disk space.
+# !!!
+
 name: docker_publish
 
 # Controls when the action will run.
