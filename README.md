@@ -2,7 +2,7 @@
 
 This is the Docker image for [WhisperX: Automatic Speech Recognition with Word-Level Timestamps (and Speaker Diarization)](https://github.com/m-bain/whisperX)
 
-Get the Dockerfile at [GitHub](https://github.com/jim60105/docker-whisperX), or pull the image from [ghcr.io](https://ghcr.io/jim60105/whisperx) or [quay.io](https://quay.io/jim60105/whisperx).
+Get the Dockerfile at [GitHub](https://github.com/jim60105/docker-whisperX), or pull the image from [ghcr.io](https://ghcr.io/jim60105/whisperx).
 
 ## Available Image Tags
 
@@ -12,7 +12,7 @@ Get the Dockerfile at [GitHub](https://github.com/jim60105/docker-whisperX), or 
 
 The image tags are formatted as `WHISPER_MODEL`-`LANG`, for example, `tiny-en`, `base-de`, or `large-v2-zh`. Please note that whisper models `*.en` and `large-v1` are excluded.
 
-You can find all available tags at [ghcr.io](https://ghcr.io/jim60105/whisperx) and [quay.io](https://quay.io/jim60105/whisperx).
+You can find all available tags at [ghcr.io](https://ghcr.io/jim60105/whisperx).
 
 In addition, there is also a `no_model` tag that does not include any pre-downloaded models. It is also referred to as `latest`.
 

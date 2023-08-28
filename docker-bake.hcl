@@ -56,8 +56,7 @@ target "build" {
   name       = "whisperx-${WHISPER_MODEL}-${LANG}"
   dockerfile = "Dockerfile"
   tags = [
-    "ghcr.io/jim60105/whisperx:${WHISPER_MODEL}-${LANG}",
-    "quay.io/jim60105/whisperx:${WHISPER_MODEL}-${LANG}"
+    "ghcr.io/jim60105/whisperx:${WHISPER_MODEL}-${LANG}"
   ]
   platforms  = ["linux/amd64"]
   cache-from = ["type=local,mode=max,src=cache"]
@@ -67,9 +66,7 @@ target "build" {
 target "no_model" {
   dockerfile = "Dockerfile.no_model"
   tags = [
-    "quay.io/jim60105/whisperx:latest",
     "ghcr.io/jim60105/whisperx:latest",
-    "quay.io/jim60105/whisperx:no_model",
     "ghcr.io/jim60105/whisperx:no_model"
   ]
   platforms  = ["linux/amd64"]
