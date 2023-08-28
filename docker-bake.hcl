@@ -48,6 +48,11 @@ target "build" {
     ]
   }
 
+  args = {
+    WHISPER_MODEL = "${WHISPER_MODEL}"
+    LANG          = "${LANG}"
+  }
+
   name       = "whisperx-${WHISPER_MODEL}-${LANG}"
   dockerfile = "Dockerfile"
   tags = [
