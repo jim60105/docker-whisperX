@@ -39,7 +39,7 @@ jobs:
           dotnet: true
           haskell: true
           large-packages: true
-          docker-images: false
+          docker-images: true
           swap-storage: false
 
       - name: Checkout
@@ -149,7 +149,7 @@ jobs:
           dotnet: true
           haskell: true
           large-packages: true
-          docker-images: false
+          docker-images: true
           swap-storage: false
 
       - name: Checkout
