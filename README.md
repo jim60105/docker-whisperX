@@ -1,6 +1,6 @@
 # docker-whisperX
 
-This is a Docker image for [WhisperX](https://github.com/m-bain/whisperX): Automatic Speech Recognition with Word-Level Timestamps (and Speaker Diarization)
+This is the Docker image for [WhisperX: Automatic Speech Recognition with Word-Level Timestamps (and Speaker Diarization)](https://github.com/m-bain/whisperX)
 
 ## Building the Docker Image
 
@@ -31,3 +31,9 @@ docker run --gpus all -it -v "$(PWD):/app" whisperx:largev2-ja -- --output_forma
 > [!NOTE]
 > Remember to prepend `--` before the arguments.\
 > `--model` and `--language` args are defined in Dockerfile, no need to specify.
+
+## LICENSE
+
+The main program, WhisperX, is distributed under the BSD-4 license. Please refer to the git submodules for their respective source code licenses.
+
+The Dockerfile from this repository is licensed under MIT.
