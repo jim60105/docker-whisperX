@@ -116,6 +116,7 @@ jobs:
           - ko
           - ur
           - te
+          - hi
         model:
           - tiny
           - base

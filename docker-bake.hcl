@@ -44,7 +44,8 @@ target "build" {
       "vi",
       "ko",
       "ur",
-      "te"
+      "te",
+      "hi",
     ]
   }
 
