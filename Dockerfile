@@ -8,9 +8,9 @@ FROM python:3.10-slim as dependencies
 # Setup venv
 RUN python3 -m venv /venv
 ARG PATH="/venv/bin:$PATH"
-RUN python3 -m pip install --upgrade pip setuptools
+RUN --mount=type=cache,target=/root/.cache/pip pip install --upgrade pip setuptools
 # Install requirements
-RUN python3 -m pip install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
+RUN --mount=type=cache,target=/root/.cache/pip pip install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
 
 # Add git
 ARG DEBIAN_FRONTEND=noninteractive
@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends git
 
 # Install whisperX
 COPY ./whisperX /code
-RUN python3 -m pip install /code
+RUN --mount=type=cache,target=/root/.cache/pip pip install /code
 
 
 FROM dependencies as load_model
@@ -42,8 +42,12 @@ RUN python3 load_align_model.py ${LANG}
 
 FROM python:3.10-slim
 
+# ffmpeg
+COPY --link --from=mwader/static-ffmpeg:6.0 /ffmpeg /usr/local/bin/
+COPY --link --from=mwader/static-ffmpeg:6.0 /ffprobe /usr/local/bin/
+
 # Copy and use venv
-COPY --from=dependencies /venv /venv
+COPY --link --from=dependencies /venv /venv
 ARG PATH="/venv/bin:$PATH"
 ENV PATH=${PATH}
 
@@ -58,10 +62,6 @@ ARG TORCH_HOME
 ARG HF_HOME
 ENV TORCH_HOME=${TORCH_HOME}
 ENV HF_HOME=${HF_HOME}
-
-# ffmpeg
-COPY --link --from=mwader/static-ffmpeg:6.0 /ffmpeg /usr/local/bin/
-COPY --link --from=mwader/static-ffmpeg:6.0 /ffprobe /usr/local/bin/
 
 ARG WHISPER_MODEL
 ENV WHISPER_MODEL=${WHISPER_MODEL}
