@@ -17,10 +17,6 @@ jobs:
   docker-no_model:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: true
-      max-parallel: 1 # only one job at a time
-
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Free Disk Space (Ubuntu)
@@ -84,7 +80,7 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       max-parallel: 1 # only one job at a time
       matrix:
         lang:
