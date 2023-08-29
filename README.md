@@ -44,7 +44,7 @@ docker build --build-arg LANG=ja --build-arg WHISPER_MODEL=large-v2 -t whisperx:
 Mount the current directory as `/app` and run WhisperX with additional input arguments:
 
 ```bash
-docker run --gpus all -it -v "$(PWD):/app" whisperx:large-v2-ja -- --output_format srt audio.mp3
+docker run --gpus all -it -v ".:/app" whisperx:large-v2-ja -- --output_format srt audio.mp3
 ```
 
 > [!NOTE]
