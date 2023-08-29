@@ -2,7 +2,6 @@ ARG WHISPER_MODEL=base
 ARG LANG=en
 
 FROM nvcr.io/nvidia/pytorch:23.05-py3 as base
-ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 ENV TORCH_HOME=/cache/torch
