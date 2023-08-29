@@ -14,7 +14,7 @@ COPY --link --from=mwader/static-ffmpeg:6.0 /ffprobe /usr/local/bin/
 
 # Install requirements
 COPY ./whisperX/requirements.txt .
-RUN --mount=type=cache,target=/root/.cache/pip pip install -r ./requirements.txt ujson torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2
+RUN python3 -m pip install --no-cache-dir -r ./requirements.txt ujson torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2
 
 FROM base AS load_model
 
@@ -31,7 +31,7 @@ FROM base AS final
 
 # Install whisperX
 COPY ./whisperX/ .
-RUN --mount=type=cache,target=/root/.cache/pip pip install .
+RUN python3 -m pip install --no-cache-dir .
 
 # Non-root user
 RUN useradd -m -s /bin/bash appuser
