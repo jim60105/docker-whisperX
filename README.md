@@ -4,14 +4,19 @@ This is the Docker image for [WhisperX: Automatic Speech Recognition with Word-L
 
 Get the Dockerfile at [GitHub](https://github.com/jim60105/docker-whisperX), or pull the image from [ghcr.io](https://ghcr.io/jim60105/whisperx).
 
-## Available Image Tags
+## Available Pre-build Image
 
-> [!WARNING]
-> Due to the excessively large file sizes (40GB+), continuous integration cannot be set up for these images. As a result, they will not update automatically.\
-> Please build them manually if they are outdated.
+> [!NOTE]
+> The WhisperX code version in these images corresponds to the git submodule commit hash.
+
+```bash
+docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:base-en     -- --output_format srt audio.mp3
+docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:large-v2-ja -- --output_format srt audio.mp3
+docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:no_model    -- --model tiny --language en --output_format srt audio.mp3
+```
 
 The image tags are formatted as `WHISPER_MODEL`-`LANG`, for example, `tiny-en`, `base-de`, or `large-v2-zh`.\
-Please note that I does not uploaded all the combinations.
+Please note that whisper models `*.en` and `large-v1` are excluded.
 
 You can find all available tags at [ghcr.io](https://ghcr.io/jim60105/whisperx).
 
@@ -37,6 +42,12 @@ For example, if you want to build the image with `ja` language and `large-v2` mo
 
 ```bash
 docker build --build-arg LANG=ja --build-arg WHISPER_MODEL=large-v2 -t whisperx:large-v2-ja .
+```
+
+If you want to build all images at once, we have [a Docker bake file](https://github.com/jim60105/docker-whisperX/blob/master/docker-bake.hcl) available:
+
+```bash
+docker buildx bake no_model build
 ```
 
 ### Usage Command
