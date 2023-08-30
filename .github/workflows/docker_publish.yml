@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 2
+      # max-parallel: 2
       matrix:
         lang:
           - en
