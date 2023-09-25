@@ -1,0 +1,53 @@
+name: Submodule Updates
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+jobs:
+  update_submodules:
+    name: Submodule update
+    runs-on: ubuntu-latest
+    env:
+      PARENT_REPOSITORY: ${{ github.repository_owner }}/docker-whisperX
+      CHECKOUT_BRANCH: master
+      PR_AGAINST_BRANCH: master
+      OWNER: ${{ github.repository_owner }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Update Submodules
+        uses: releasehub-com/github-action-create-pr-parent-submodule@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          parent_repository: ${{ env.PARENT_REPOSITORY }}
+          checkout_branch: ${{ env.CHECKOUT_BRANCH}}
+          pr_against_branch: ${{ env.PR_AGAINST_BRANCH }}
+          owner: ${{ env.OWNER }}
+          label: "automerge"
+
+  auto_merge_pr:
+    name: Auto Merge PR
+    runs-on: ubuntu-latest
+    needs: "update_submodules"
+    steps:
+      - name: Git Auto Merge
+        uses: plm9606/automerge_actions@1.2.2
+        with:
+          # Use PAT to trigger the docker workflow
+          github-token: ${{ secrets.CR_PAT }}
+          merge-method: squash
+          reviewers-number: 0
+          label-name: "automerge"
+          auto-delete: true
+
+      - name: Remove label
+        if: ${{ success() }}
+        uses: buildsville/add-remove-label@v1
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
+          label: "automerge"
+          type: remove
