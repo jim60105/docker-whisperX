@@ -6,8 +6,11 @@ Get the Dockerfile at [GitHub](https://github.com/jim60105/docker-whisperX), or 
 
 ## Available Pre-build Image
 
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/jim60105/docker-whisperX/master?label=%20&style=for-the-badge) ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=%20&style=for-the-badge)
+
 > [!NOTE]
-> The WhisperX code version in these images corresponds to the git submodule commit hash.
+> The WhisperX code version in these images corresponds to the git submodule commit hash.\
+> The auto update CI runs weekly to update the submodule and rebuild the images.
 
 ```bash
 docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:base-en     -- --output_format srt audio.mp3
