@@ -19,14 +19,14 @@ jobs:
     needs: "Auto_Approve"
     steps:
       - name: Git Auto Merge
-        uses: plm9606/automerge_actions@1.2.2
+        uses: plm9606/automerge_actions@1.2.3
         with:
           # Use PAT to trigger another workflow
           github-token: ${{ secrets.CR_PAT }}
           merge-method: squash
           reviewers-number: 0
           label-name: "automerge"
-          auto-delete: true
+          auto-delete: "true"
 
       - name: Remove label
         if: ${{ success() }}
