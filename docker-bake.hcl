@@ -59,7 +59,7 @@ target "build" {
   tags = [
     "ghcr.io/jim60105/whisperx:${WHISPER_MODEL}-${LANG}"
   ]
-  platforms  = ["linux/amd64"]
+  platforms  = ["linux/amd64", "linux/arm64"]
   cache-from = ["type=local,mode=max,src=cache"]
   cache-to   = ["type=local,mode=max,dest=cache"]
 }
@@ -70,7 +70,7 @@ target "no_model" {
     "ghcr.io/jim60105/whisperx:latest",
     "ghcr.io/jim60105/whisperx:no_model"
   ]
-  platforms  = ["linux/amd64"]
+  platforms  = ["linux/amd64", "linux/arm64"]
   cache-from = ["type=local,mode=max,src=cache"]
   cache-to   = ["type=local,mode=max,dest=cache"]
 }

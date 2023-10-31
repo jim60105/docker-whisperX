@@ -16,6 +16,13 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install torch torchaudio --ex
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends git
 
+# Missing dependencies for arm64
+# https://github.com/jim60105/docker-whisperX/issues/14
+ARG TARGETPLATFORM
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+    apt-get install -y --no-install-recommends libgomp1 libsndfile1; \
+    fi
+
 # Install whisperX
 COPY ./whisperX /code
 RUN --mount=type=cache,target=/root/.cache/pip pip install /code
