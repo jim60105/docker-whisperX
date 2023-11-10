@@ -1,6 +1,6 @@
 # docker-whisperX
 
-This is the Docker image for [WhisperX: Automatic Speech Recognition with Word-Level Timestamps (and Speaker Diarization)](https://github.com/m-bain/whisperX)
+This is the docker image for [WhisperX: Automatic Speech Recognition with Word-Level Timestamps (and Speaker Diarization)](https://github.com/m-bain/whisperX) from the community.
 
 Get the Dockerfile at [GitHub](https://github.com/jim60105/docker-whisperX), or pull the image from [ghcr.io](https://ghcr.io/jim60105/whisperx).
 
@@ -24,6 +24,15 @@ Please note that whisper models `*.en` and `large-v1` are excluded.
 You can find all available tags at [ghcr.io](https://ghcr.io/jim60105/whisperx).
 
 In addition, there is also a `no_model` tag that does not include any pre-downloaded models, also referred to as `latest`.
+
+## Preserve the download cache for the align models when working with various languages
+
+You can mount the `/cache` to share align models between containers.  
+Please use tag `no_model` (`latest`) for this scenario.
+
+```bash
+docker run --gpus all -it -v ".:/app" -v whisper_cache:/cache ghcr.io/jim60105/whisperx:latest -- --model large-v2 --language en --output_format srt audio.mp3
+```
 
 ## Building the Docker Image
 
@@ -53,6 +62,9 @@ If you want to build all images at once, we have [a Docker bake file](https://gi
 docker buildx bake no_model build
 ```
 
+> [!WARNING]
+> [Bake](https://docs.docker.com/build/bake/) is currently an experimental feature, and it may require additional configuration in order to function correctly.
+
 ### Usage Command
 
 Mount the current directory as `/app` and run WhisperX with additional input arguments:
@@ -68,6 +80,6 @@ docker run --gpus all -it -v ".:/app" whisperx:large-v2-ja -- --output_format sr
 ## LICENSE
 
 The main program, WhisperX, is distributed under [the BSD-4 license](https://github.com/m-bain/whisperX/blob/main/LICENSE).\
-Please refer to the git submodules for their respective source code licenses.
+Please consult their repository for access to the source code and licenses.
 
-The Dockerfile from this repository is licensed under [MIT](/LICENSE).
+The Dockerfile and CI workflow files in this repository are licensed under [the MIT license](/LICENSE).
