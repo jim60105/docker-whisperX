@@ -7,6 +7,7 @@ FROM python:3.10-slim as dependencies
 RUN python3 -m venv /venv
 ARG PATH="/venv/bin:$PATH"
 RUN --mount=type=cache,target=/root/.cache/pip pip install --upgrade pip setuptools
+
 # Install requirements
 RUN --mount=type=cache,target=/root/.cache/pip pip install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
 
@@ -29,6 +30,11 @@ COPY --link --from=mwader/static-ffmpeg:6.0 /ffprobe /usr/local/bin/
 COPY --link --from=dependencies /venv /venv
 ARG PATH="/venv/bin:$PATH"
 ENV PATH=${PATH}
+
+# Missing dependencies for arm64
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+    apt-get install -y --no-install-recommends libgomp1 libsndfile1; \
+    fi
 
 # Non-root user
 RUN useradd -m -s /bin/bash appuser \

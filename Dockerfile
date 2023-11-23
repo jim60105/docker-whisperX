@@ -9,6 +9,7 @@ FROM python:3.10-slim as dependencies
 RUN python3 -m venv /venv
 ARG PATH="/venv/bin:$PATH"
 RUN --mount=type=cache,target=/root/.cache/pip pip install --upgrade pip setuptools
+
 # Install requirements
 RUN --mount=type=cache,target=/root/.cache/pip pip install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
 
