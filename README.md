@@ -4,6 +4,24 @@ This is the docker image for [WhisperX: Automatic Speech Recognition with Word-L
 
 Get the Dockerfile at [GitHub](https://github.com/jim60105/docker-whisperX), or pull the image from [ghcr.io](https://ghcr.io/jim60105/whisperx).
 
+## Get your Docker ready for GPU support
+
+### Windows
+
+Once you have installed **Docker Desktop**, **CUDA Toolkit**, **NVIDIA Windows Driver**, and ensured that your Docker is running with **WSL2**, you are ready to go.
+
+Here is the official documentation for further reference.  
+<https://docs.nvidia.com/cuda/wsl-user-guide/index.html#nvidia-compute-software-support-on-wsl-2>
+<https://docs.docker.com/desktop/wsl/use-wsl/#gpu-support>
+
+### Linux, OSX
+
+Install an NVIDIA GPU Driver if you do not already have one installed.  
+<https://docs.nvidia.com/datacenter/tesla/tesla-installation-notes/index.html>
+
+Install the NVIDIA Container Toolkit with this guide.  
+<https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html>
+
 ## Available Pre-build Image
 
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/jim60105/docker-whisperX/master?label=%20&style=for-the-badge) ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=%20&style=for-the-badge)
