@@ -58,6 +58,11 @@ COPY --link --from=dependencies /venv /venv
 ARG PATH="/venv/bin:$PATH"
 ENV PATH=${PATH}
 
+# Missing dependencies for arm64
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+    apt-get install -y --no-install-recommends libgomp1 libsndfile1; \
+    fi
+
 # Non-root user
 RUN useradd -m -s /bin/bash appuser
 USER appuser
