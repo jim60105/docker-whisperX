@@ -21,6 +21,7 @@ jobs:
 
       - name: Update Submodules
         uses: releasehub-com/github-action-create-pr-parent-submodule@v1
+        continue-on-error: true
         with:
           github_token: ${{ secrets.CR_PAT }}
           parent_repository: ${{ env.PARENT_REPOSITORY }}
