@@ -18,6 +18,7 @@ target "build" {
       "small",
       "medium",
       "large-v2",
+      "large-v3",
     ]
     "LANG" = [
       "en",

@@ -32,12 +32,12 @@ Install the NVIDIA Container Toolkit with this guide.
 
 ```bash
 docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:base-en     -- --output_format srt audio.mp3
-docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:large-v2-ja -- --output_format srt audio.mp3
+docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:large-v3-ja -- --output_format srt audio.mp3
 docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:no_model    -- --model tiny --language en --output_format srt audio.mp3
 ```
 
-The image tags are formatted as `WHISPER_MODEL`-`LANG`, for example, `tiny-en`, `base-de`, or `large-v2-zh`.\
-Please note that whisper models `*.en` and `large-v1` are excluded.
+The image tags are formatted as `WHISPER_MODEL`-`LANG`, for example, `tiny-en`, `base-de`, or `large-v3-zh`.\
+Please be aware that the whisper models `*.en` and `large-v1` have been excluded as I believe they are not frequently used. If you require these models, please refer to the following section to build them on your own.
 
 You can find all available tags at [ghcr.io](https://ghcr.io/jim60105/whisperx).
 
@@ -49,7 +49,7 @@ You can mount the `/cache` to share align models between containers.
 Please use tag `no_model` (`latest`) for this scenario.
 
 ```bash
-docker run --gpus all -it -v ".:/app" -v whisper_cache:/cache ghcr.io/jim60105/whisperx:latest -- --model large-v2 --language en --output_format srt audio.mp3
+docker run --gpus all -it -v ".:/app" -v whisper_cache:/cache ghcr.io/jim60105/whisperx:latest -- --model large-v3 --language en --output_format srt audio.mp3
 ```
 
 ## Building the Docker Image
@@ -68,10 +68,10 @@ The [Dockerfile](https://github.com/jim60105/docker-whisperX/blob/master/Dockerf
 
 ### Build Command
 
-For example, if you want to build the image with `ja` language and `large-v2` model:
+For example, if you want to build the image with `ja` language and `large-v3` model:
 
 ```bash
-docker build --build-arg LANG=ja --build-arg WHISPER_MODEL=large-v2 -t whisperx:large-v2-ja .
+docker build --build-arg LANG=ja --build-arg WHISPER_MODEL=large-v3 -t whisperx:large-v3-ja .
 ```
 
 If you want to build all images at once, we have [a Docker bake file](https://github.com/jim60105/docker-whisperX/blob/master/docker-bake.hcl) available:
@@ -88,7 +88,7 @@ docker buildx bake no_model build
 Mount the current directory as `/app` and run WhisperX with additional input arguments:
 
 ```bash
-docker run --gpus all -it -v ".:/app" whisperx:large-v2-ja -- --output_format srt audio.mp3
+docker run --gpus all -it -v ".:/app" whisperx:large-v3-ja -- --output_format srt audio.mp3
 ```
 
 > [!NOTE]
