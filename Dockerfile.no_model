@@ -36,13 +36,6 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
     apt-get install -y --no-install-recommends libgomp1 libsndfile1; \
     fi
 
-# Non-root user
-RUN useradd -m -s /bin/bash appuser \
-    && mkdir -p /cache \
-    && chown -R appuser:appuser /cache
-USER appuser
-
-WORKDIR /app
 ARG TORCH_HOME
 ARG HF_HOME
 ENV TORCH_HOME=${TORCH_HOME}
@@ -52,6 +45,12 @@ ARG WHISPER_MODEL
 ENV WHISPER_MODEL=${WHISPER_MODEL}
 ARG LANG
 ENV LANG=${LANG}
+
+RUN useradd -m -s /bin/bash 1001 && \
+    mkdir -p ${TORCH_HOME} && chown 1001:1001 ${TORCH_HOME} && \
+    mkdir -p ${HF_HOME} && chown 1001:1001 ${HF_HOME}
+USER 1001
+WORKDIR /app
 
 STOPSIGNAL SIGINT
 ENTRYPOINT whisperx $@

@@ -55,8 +55,6 @@ RUN python3 load_align_model.py ${LANG}
 
 FROM python as final
 
-USER 1001
-
 # ffmpeg
 COPY --link --from=mwader/static-ffmpeg:6.0 /ffmpeg /usr/local/bin/
 COPY --link --from=mwader/static-ffmpeg:6.0 /ffprobe /usr/local/bin/
@@ -64,18 +62,21 @@ COPY --link --from=mwader/static-ffmpeg:6.0 /ffprobe /usr/local/bin/
 # Copy venv
 COPY --link --from=build /venv /venv
 
-COPY --chown=1001 --from=load_model /cache /cache
-
-WORKDIR /app
 ARG TORCH_HOME
 ARG HF_HOME
 ENV TORCH_HOME=${TORCH_HOME}
 ENV HF_HOME=${HF_HOME}
 
+COPY --chown=1001 --from=load_model ${TORCH_HOME} ${TORCH_HOME}
+COPY --chown=1001 --from=load_model ${HF_HOME} ${HF_HOME}
+
 ARG WHISPER_MODEL
 ENV WHISPER_MODEL=${WHISPER_MODEL}
 ARG LANG
 ENV LANG=${LANG}
+
+USER 1001
+WORKDIR /app
 
 STOPSIGNAL SIGINT
 ENTRYPOINT whisperx --model ${WHISPER_MODEL} --language ${LANG} $@

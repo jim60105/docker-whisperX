@@ -64,22 +64,22 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
     apt-get install -y --no-install-recommends libgomp1 libsndfile1; \
     fi
 
-# Non-root user
-RUN useradd -m -s /bin/bash appuser
-USER appuser
-
-COPY --chown=appuser --from=load_model /cache /cache
-
-WORKDIR /app
 ARG TORCH_HOME
 ARG HF_HOME
 ENV TORCH_HOME=${TORCH_HOME}
 ENV HF_HOME=${HF_HOME}
 
+COPY --chown=1001 --from=load_model ${TORCH_HOME} ${TORCH_HOME}
+COPY --chown=1001 --from=load_model ${HF_HOME} ${HF_HOME}
+
 ARG WHISPER_MODEL
 ENV WHISPER_MODEL=${WHISPER_MODEL}
 ARG LANG
 ENV LANG=${LANG}
+
+RUN useradd -m -s /bin/bash 1001
+USER 1001
+WORKDIR /app
 
 STOPSIGNAL SIGINT
 ENTRYPOINT whisperx --model ${WHISPER_MODEL} --language ${LANG} $@

@@ -36,8 +36,6 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install /code
 
 FROM python as final
 
-USER 1001
-
 # ffmpeg
 COPY --link --from=mwader/static-ffmpeg:6.0 /ffmpeg /usr/local/bin/
 COPY --link --from=mwader/static-ffmpeg:6.0 /ffprobe /usr/local/bin/
@@ -45,16 +43,21 @@ COPY --link --from=mwader/static-ffmpeg:6.0 /ffprobe /usr/local/bin/
 # Copy venv
 COPY --link --from=build /venv /venv
 
-WORKDIR /app
 ARG TORCH_HOME
 ARG HF_HOME
 ENV TORCH_HOME=${TORCH_HOME}
 ENV HF_HOME=${HF_HOME}
 
+RUN mkdir -p ${TORCH_HOME} && chown 1001:1001 ${TORCH_HOME}
+RUN mkdir -p ${HF_HOME} && chown 1001:1001 ${HF_HOME}
+
 ARG WHISPER_MODEL
 ENV WHISPER_MODEL=${WHISPER_MODEL}
 ARG LANG
 ENV LANG=${LANG}
+
+USER 1001
+WORKDIR /app
 
 STOPSIGNAL SIGINT
 ENTRYPOINT whisperx $@
