@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.4
+
 ARG WHISPER_MODEL=base
 ARG LANG=en
 ARG TORCH_HOME=/cache/torch
