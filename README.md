@@ -68,10 +68,10 @@ The [Dockerfile](https://github.com/jim60105/docker-whisperX/blob/master/Dockerf
 
 ### Build Command
 
-For example, if you want to build the image with `ja` language and `large-v3` model:
+For example, if you want to build the image with `en` language and `large-v3` model:
 
 ```bash
-docker build --build-arg LANG=ja --build-arg WHISPER_MODEL=large-v3 -t whisperx:large-v3-ja .
+DOCKER_BUILDKIT=1 docker buildx build --build-arg LANG=en --build-arg WHISPER_MODEL=large-v3 -t whisperx:large-v3-en .
 ```
 
 If you want to build all images at once, we have [a Docker bake file](https://github.com/jim60105/docker-whisperX/blob/master/docker-bake.hcl) available:
