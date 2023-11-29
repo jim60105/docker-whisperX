@@ -20,50 +20,16 @@ jobs:
     runs-on: ubuntu-latest
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: true
-
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: false
-
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: true
 
-      - name: Docker meta data:no_model
-        id: meta
-        uses: docker/metadata-action@v4
+      - name: Setup docker
+        id: setup
+        uses: ./.github/workflows/docker-reused-setup-steps
         with:
-          images: ghcr.io/${{ github.repository_owner }}/whisperx
-          flavor: |
-            latest=true
-            prefix=
-            suffix=
-          tags: |
-            no_model
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      # Create a Access Token with `read:packages` and `write:packages` scopes
-      # CR_PAT
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.CR_PAT }}
+          token: ${{ secrets.CR_PAT }}
 
       - name: Build and push:no_model
         uses: docker/build-push-action@v4
@@ -71,8 +37,8 @@ jobs:
           context: .
           file: ./Dockerfile.no_model
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.setup.outputs.tags }}
+          labels: ${{ steps.setup.outputs.labels }}
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -98,50 +64,17 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: true
-
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: false
-
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: true
 
-      - name: Docker meta data:${{ matrix.model }}-${{ matrix.lang }}
-        id: meta
-        uses: docker/metadata-action@v4
+      - name: Setup docker
+        id: setup
+        uses: ./.github/workflows/docker-reused-setup-steps
         with:
-          images: ghcr.io/${{ github.repository_owner }}/whisperx
-          flavor: |
-            latest=false
-            prefix=
-            suffix=
-          tags: |
-            ${{ matrix.model}}-${{ matrix.lang }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      # Create a Access Token with `read:packages` and `write:packages` scopes
-      # CR_PAT
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.CR_PAT }}
+          token: ${{ secrets.CR_PAT }}
+          tag: ${{ matrix.model }}-${{ matrix.lang }}
 
       - name: Build and push:${{ matrix.model }}-${{ matrix.lang }}
         uses: docker/build-push-action@v4
@@ -149,8 +82,8 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.setup.outputs.tags }}
+          labels: ${{ steps.setup.outputs.labels }}
           build-args: |
             WHISPER_MODEL=${{ matrix.model }}
             LANG=${{ matrix.lang }}
@@ -203,50 +136,17 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: true
-
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: false
-
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: true
 
-      - name: Docker meta data:${{ matrix.model }}-${{ matrix.lang }}
-        id: meta
-        uses: docker/metadata-action@v4
+      - name: Setup docker
+        id: setup
+        uses: ./.github/workflows/docker-reused-setup-steps
         with:
-          images: ghcr.io/${{ github.repository_owner }}/whisperx
-          flavor: |
-            latest=false
-            prefix=
-            suffix=
-          tags: |
-            ${{ matrix.model}}-${{ matrix.lang }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      # Create a Access Token with `read:packages` and `write:packages` scopes
-      # CR_PAT
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.CR_PAT }}
+          token: ${{ secrets.CR_PAT }}
+          tag: ${{ matrix.model }}-${{ matrix.lang }}
 
       - name: Build and push:${{ matrix.model }}-${{ matrix.lang }}
         uses: docker/build-push-action@v4
@@ -254,8 +154,8 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.setup.outputs.tags }}
+          labels: ${{ steps.setup.outputs.labels }}
           build-args: |
             WHISPER_MODEL=${{ matrix.model }}
             LANG=${{ matrix.lang }}
