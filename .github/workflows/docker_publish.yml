@@ -14,6 +14,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
+  # Run the no_model build first ensure that the code at least builds
   docker-no_model:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -76,40 +77,16 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  docker:
+  # Run en first in sequence to build the cache
+  docker-en:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
-      max-parallel: 10
+      fail-fast: true
+      max-parallel: 1
       matrix:
         lang:
           - en
-          - fr
-          - de
-          - es
-          - it
-          - ja
-          - zh
-          - nl
-          - uk
-          - pt
-          - ar
-          - cs
-          - ru
-          - pl
-          - hu
-          - fi
-          - fa
-          - el
-          - tr
-          - da
-          - he
-          - vi
-          - ko
-          - ur
-          - te
-          - hi
         model:
           - tiny
           - base
@@ -180,3 +157,107 @@ jobs:
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Run all other languages in parallel without cache export
+  docker:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        lang:
+          - fr
+          - de
+          - es
+          - it
+          - ja
+          - zh
+          - nl
+          - uk
+          - pt
+          - ar
+          - cs
+          - ru
+          - pl
+          - hu
+          - fi
+          - fa
+          - el
+          - tr
+          - da
+          - he
+          - vi
+          - ko
+          - ur
+          - te
+          - hi
+        model:
+          - tiny
+          - base
+          - small
+          - medium
+          - large-v2
+          - large-v3
+    needs: docker-en # wait for docker-en to finish
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: true
+
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: false
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Docker meta data:${{ matrix.model }}-${{ matrix.lang }}
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/whisperx
+          flavor: |
+            latest=false
+            prefix=
+            suffix=
+          tags: |
+            ${{ matrix.model}}-${{ matrix.lang }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Create a Access Token with `read:packages` and `write:packages` scopes
+      # CR_PAT
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+
+      - name: Build and push:${{ matrix.model }}-${{ matrix.lang }}
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            WHISPER_MODEL=${{ matrix.model }}
+            LANG=${{ matrix.lang }}
+          platforms: linux/amd64, linux/arm64
+          cache-from: type=gha
