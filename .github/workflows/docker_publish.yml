@@ -153,6 +153,7 @@ jobs:
           - ur
           - te
           - hi
+          - ca
         model:
           - tiny
           - base

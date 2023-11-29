@@ -47,6 +47,7 @@ target "build" {
       "ur",
       "te",
       "hi",
+      "ca",
     ]
   }
 
