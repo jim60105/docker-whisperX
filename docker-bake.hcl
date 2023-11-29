@@ -75,3 +75,13 @@ target "no_model" {
   cache-from = ["type=local,mode=max,src=cache"]
   cache-to   = ["type=local,mode=max,dest=cache"]
 }
+
+target "ubi-no_model" {
+  dockerfile = "Dockerfile.ubi-no_model"
+  tags = [
+    "ghcr.io/jim60105/whisperx:ubi-no_model"
+  ]
+  platforms  = ["linux/amd64", "linux/arm64"]
+  cache-from = ["type=local,mode=max,src=cache"]
+  cache-to   = ["type=local,mode=max,dest=cache"]
+}

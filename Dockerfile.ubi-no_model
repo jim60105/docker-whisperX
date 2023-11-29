@@ -1,0 +1,60 @@
+# syntax=docker/dockerfile:1
+ARG TORCH_HOME=/cache/torch
+ARG HF_HOME=/cache/huggingface
+
+FROM registry.access.redhat.com/ubi9/ubi-minimal as python
+
+# These libs are missing dependencies for arm64
+RUN microdnf -y install python3.11 python3.11-devel python3.11-pip && \
+    microdnf clean all
+RUN ln -s /usr/bin/python3.11 /usr/bin/python3 && \
+    ln -s /usr/bin/pip3.11 /usr/bin/pip
+
+RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH"
+
+# Missing dependencies for arm64
+# https://github.com/jim60105/docker-whisperX/issues/14
+ARG TARGETPLATFORM
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+    microdnf -y install libgomp libsndfile && microdnf clean all; \
+    fi
+
+
+FROM python as build
+
+# Install build time requirements
+RUN microdnf -y install git && \
+    microdnf clean all
+
+RUN --mount=type=cache,target=/root/.cache/pip pip install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
+
+# Install whisperX
+COPY ./whisperX /code
+RUN --mount=type=cache,target=/root/.cache/pip pip install /code
+
+
+FROM python as final
+
+USER 1001
+
+# ffmpeg
+COPY --link --from=mwader/static-ffmpeg:6.0 /ffmpeg /usr/local/bin/
+COPY --link --from=mwader/static-ffmpeg:6.0 /ffprobe /usr/local/bin/
+
+# Copy venv
+COPY --link --from=build /venv /venv
+
+WORKDIR /app
+ARG TORCH_HOME
+ARG HF_HOME
+ENV TORCH_HOME=${TORCH_HOME}
+ENV HF_HOME=${HF_HOME}
+
+ARG WHISPER_MODEL
+ENV WHISPER_MODEL=${WHISPER_MODEL}
+ARG LANG
+ENV LANG=${LANG}
+
+STOPSIGNAL SIGINT
+ENTRYPOINT whisperx $@

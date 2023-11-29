@@ -95,6 +95,22 @@ docker run --gpus all -it -v ".:/app" whisperx:large-v3-ja -- --output_format sr
 > Remember to prepend `--` before the arguments.\
 > `--model` and `--language` args are defined in Dockerfile, no need to specify.
 
+## UBI9 Image
+
+I have created an alternative [Dockerfile.ubi](Dockerfile.ubi) that is based on the **Red Hat UBI** image, unlike the default one which used the **Python official image** as the base image. If you are a Red Hat customer, I believe you will find its benefits.
+
+> With the release of the Red Hat Universal Base Image (UBI), you can now take advantage of the greater reliability, security, and performance of official Red Hat container images where OCI-compliant Linux containers run - whether you're a customer or not. --[Red Hat](https://www.redhat.com/en/blog/introducing-red-hat-universal-base-image)
+
+It is important to mention that it is *NOT* necessary obtaining a license from Red Hat to use UBI, however, if you are the subscriber and runs it on RHEL/OpenShift, you can get supports from Red Hat.
+
+Despite my initial hesitation, I made the decision not to utilize the UBI version as the default image. The *Python official image* has a significantly larger user base compared to *UBI*, and I believe that opting for it aligns better with public expectations. Nevertheless, I would still suggest giving the *UBI* version a try.
+
+You can get the pre-build image at tag [ubi-no_model](https://ghcr.io/jim60105/whisperx:ubi-no_model). Notice that only no_model is available. Feel free to build your own image with the [Dockerfile.ubi](Dockerfile.ubi) for your needs. This Dockerfile supports the same build arguments as the default one.
+
+```bash
+docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:ubi-no_model -- --model tiny --language en --output_format srt audio.mp3
+```
+
 ## LICENSE
 
 The main program, WhisperX, is distributed under [the BSD-4 license](https://github.com/m-bain/whisperX/blob/main/LICENSE).\
