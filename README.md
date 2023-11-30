@@ -36,6 +36,9 @@ docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:large-v3-ja -- -
 docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:no_model    -- --model tiny --language en --output_format srt audio.mp3
 ```
 
+In case of multiple language alignments needed, use space separated list of languages"LANG=pl fr en" when building the image.
+
+
 The image tags are formatted as `WHISPER_MODEL`-`LANG`, for example, `tiny-en`, `base-de`, or `large-v3-zh`.\
 Please be aware that the whisper models `*.en` and `large-v1` have been excluded as I believe they are not frequently used. If you require these models, please refer to the following section to build them on your own.
 
@@ -65,6 +68,9 @@ The [Dockerfile](https://github.com/jim60105/docker-whisperX/blob/master/Dockerf
 - `LANG`: The language to transcribe. The default is `en`. See [here](https://github.com/jim60105/docker-whisperX/blob/master/load_align_model.py) for supported languages.
 
 - `WHISPER_MODEL`: The model name. The default is `base`. See [fast-whisper](https://huggingface.co/guillaumekln) for supported models.
+
+In case of multiple language alignments needed, use space separated list of languages `"LANG=pl fr en"` when building the image. Worth adding it when tagging image too, i.e. -t local/whisperx:large-v3-pl-fr-en
+
 
 ### Build Command
 

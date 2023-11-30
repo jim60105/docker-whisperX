@@ -53,7 +53,9 @@ RUN python3 -c 'import faster_whisper; model = faster_whisper.WhisperModel("'${W
 # Preload align model
 ARG LANG
 COPY load_align_model.py .
-RUN python3 load_align_model.py ${LANG}
+
+# Aligining language(s) as provided)
+RUN for i in ${LANG}; do echo "Aliging lang $i"; python3 load_align_model.py $i; done
 
 
 FROM python:3.10-slim
