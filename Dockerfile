@@ -10,12 +10,23 @@ ARG CONFIG_HOME=/.config
 ARG TORCH_HOME=${CACHE_HOME}/torch
 ARG HF_HOME=${CACHE_HOME}/huggingface
 
-FROM python:3.10-slim as build
+FROM python:3.10-slim as python
 
 # Setup venv
 RUN python3 -m venv /venv
 ARG PATH="/venv/bin:$PATH"
+ENV PATH=${PATH}
 RUN --mount=type=cache,target=/root/.cache/pip pip install --upgrade pip setuptools
+
+# Missing dependencies for arm64
+# https://github.com/jim60105/docker-whisperX/issues/14
+ARG TARGETPLATFORM
+RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+    apt-get update && apt-get install -y --no-install-recommends libgomp1 libsndfile1; \
+    fi
+
+
+FROM python as build
 
 # Install requirements
 RUN --mount=type=cache,target=/root/.cache/pip pip install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
@@ -23,13 +34,6 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install torch torchaudio --ex
 # Add git
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends git
-
-# Missing dependencies for arm64
-# https://github.com/jim60105/docker-whisperX/issues/14
-ARG TARGETPLATFORM
-RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-    apt-get install -y --no-install-recommends libgomp1 libsndfile1; \
-    fi
 
 # Install whisperX
 COPY ./whisperX /code
@@ -61,21 +65,14 @@ COPY load_align_model.py .
 RUN for i in ${LANG}; do echo "Aliging lang $i"; python3 load_align_model.py $i; done
 
 
-FROM python:3.10-slim
+FROM python as final
 
 # ffmpeg
 COPY --link --from=mwader/static-ffmpeg:6.0 /ffmpeg /usr/local/bin/
 COPY --link --from=mwader/static-ffmpeg:6.0 /ffprobe /usr/local/bin/
 
-# Copy and use venv
+# Copy venv
 COPY --link --from=build /venv /venv
-ARG PATH="/venv/bin:$PATH"
-ENV PATH=${PATH}
-
-# Missing dependencies for arm64
-RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-    apt-get install -y --no-install-recommends libgomp1 libsndfile1; \
-    fi
 
 ARG CACHE_HOME
 ARG CONFIG_HOME
