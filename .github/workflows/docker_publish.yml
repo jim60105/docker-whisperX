@@ -71,16 +71,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Run en first in sequence to build the cache
-  docker-en:
+  # Build stage load_whisper first to build the cache
+  docker-cache:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
-      max-parallel: 1
       matrix:
-        lang:
-          - en
         model:
           - tiny
           - base
@@ -102,32 +99,42 @@ jobs:
         uses: ./.github/workflows/docker-reused-setup-steps
         with:
           token: ${{ secrets.CR_PAT }}
-          tag: ${{ matrix.model }}-${{ matrix.lang }}
+          tag: ${{ matrix.model }}-cache
 
-      - name: Build and push:${{ matrix.model }}-${{ matrix.lang }}
+      - name: Cache /.cache
+        id: cache
+        uses: actions/cache@v3
+        with:
+          path: /.cache
+          key: docker-${{ matrix.model }}-${{ github.run_id }}
+          restore-keys: |
+            docker-${{ matrix.model }}
+
+      - name: Build cache:${{ matrix.model }}
         uses: docker/build-push-action@v4
         with:
           context: .
           file: ./Dockerfile
-          push: true
+          target: load_whisper
+          push: false
           tags: ${{ steps.setup.outputs.tags }}
           labels: ${{ steps.setup.outputs.labels }}
           build-args: |
             WHISPER_MODEL=${{ matrix.model }}
-            LANG=${{ matrix.lang }}
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Run all other languages in parallel without cache export
+  # Run the rest of the builds in parallel
   docker:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 6
+      # max-parallel: 6
       matrix:
         lang:
+          - en
           - fr
           - de
           - es
@@ -161,7 +168,7 @@ jobs:
           - medium
           - large-v2
           - large-v3
-    needs: docker-en # wait for docker-en to finish
+    needs: docker-cache # wait for docker-cache to finish
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -176,6 +183,13 @@ jobs:
         with:
           token: ${{ secrets.CR_PAT }}
           tag: ${{ matrix.model }}-${{ matrix.lang }}
+
+      - name: Restore cache /.cache
+        id: cache-restore
+        uses: actions/cache/restore@v3
+        with:
+          path: /.cache
+          key: docker-${{ matrix.model }}
 
       - name: Build and push:${{ matrix.model }}-${{ matrix.lang }}
         uses: docker/build-push-action@v4

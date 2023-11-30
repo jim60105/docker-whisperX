@@ -10,7 +10,7 @@ ARG CONFIG_HOME=/.config
 ARG TORCH_HOME=${CACHE_HOME}/torch
 ARG HF_HOME=${CACHE_HOME}/huggingface
 
-FROM python:3.10-slim as dependencies
+FROM python:3.10-slim as build
 
 # Setup venv
 RUN python3 -m venv /venv
@@ -36,7 +36,7 @@ COPY ./whisperX /code
 RUN --mount=type=cache,target=/root/.cache/pip pip install /code
 
 
-FROM dependencies as load_model
+FROM build as load_whisper
 
 ARG TORCH_HOME
 ARG HF_HOME
@@ -48,6 +48,12 @@ RUN python3 -c 'from whisperx.vad import load_vad_model; load_vad_model("cpu");'
 # Preload fast-whisper
 ARG WHISPER_MODEL
 RUN python3 -c 'import faster_whisper; model = faster_whisper.WhisperModel("'${WHISPER_MODEL}'")'
+
+FROM load_whisper as load_align
+
+ARG TORCH_HOME
+ARG HF_HOME
+ARG PATH="/venv/bin:$PATH"
 
 # Preload align models
 ARG LANG
@@ -62,7 +68,7 @@ COPY --link --from=mwader/static-ffmpeg:6.0 /ffmpeg /usr/local/bin/
 COPY --link --from=mwader/static-ffmpeg:6.0 /ffprobe /usr/local/bin/
 
 # Copy and use venv
-COPY --link --from=dependencies /venv /venv
+COPY --link --from=build /venv /venv
 ARG PATH="/venv/bin:$PATH"
 ENV PATH=${PATH}
 
@@ -79,7 +85,7 @@ ENV XDG_CACHE_HOME=${CACHE_HOME}
 ENV TORCH_HOME=${TORCH_HOME}
 ENV HF_HOME=${HF_HOME}
 
-COPY --link --chown=1001 --from=load_model ${CACHE_HOME} ${CACHE_HOME}
+COPY --link --chown=1001 --from=load_align ${CACHE_HOME} ${CACHE_HOME}
 RUN mkdir -p ${CONFIG_HOME} && chown 1001:1001 ${CONFIG_HOME}
 
 ARG WHISPER_MODEL
