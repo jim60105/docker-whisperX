@@ -36,7 +36,6 @@ docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:large-v3-ja -- -
 docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:no_model    -- --model tiny --language en --output_format srt audio.mp3
 ```
 
-The image tags are formatted as `WHISPER_MODEL`-`LANG`, for example, `tiny-en`, `base-de`, or `large-v3-zh`.\
 Please be aware that the whisper models `*.en` and `large-v1` have been excluded as I believe they are not frequently used. If you require these models, please refer to the following section to build them on your own.
 
 You can find all available tags at [ghcr.io](https://ghcr.io/jim60105/whisperx).
@@ -62,26 +61,34 @@ docker run --gpus all -it -v ".:/app" -v whisper_cache:/.cache ghcr.io/jim60105/
 
 The [Dockerfile](https://github.com/jim60105/docker-whisperX/blob/master/Dockerfile) builds the image contained models. It accepts two build arguments: `LANG` and `WHISPER_MODEL`.
 
-- `LANG`: The language to transcribe. The default is `en`. See [here](https://github.com/jim60105/docker-whisperX/blob/master/load_align_model.py) for supported languages.
+- `LANG`: The language to transcribe. The default is `en`. See [here](https://github.com/jim60105/docker-whisperX/blob/master/load_align_model.py) for supported languages.  
+
+The image tags are formatted as `WHISPER_MODEL`-`LANG`, for example, `tiny-en`, `base-de`, or `large-v3-zh`.\
 
 - `WHISPER_MODEL`: The model name. The default is `base`. See [fast-whisper](https://huggingface.co/guillaumekln) for supported models.
 
+In case of multiple language alignments needed, use space separated list of languages `"LANG=pl fr en"` when building the image. Also note that WhisperX is not doing well to handle multiple languages within the same audio file. Even if you do not provide the language parameter, it will still recognize the language (or fallback to en) and use it for choosing the alignment model. Alignment models are language specific. This instruction is simply for embedding multiple models into a docker image.
+
 ### Build Command
 
-For example, if you want to build the image with `ja` language and `large-v3` model:
+> [!NOTE]
+> If you are using an earlier version of the docker client, it is necessary to [enable the BuildKit mode](https://docs.docker.com/build/buildkit/#getting-started) when building the image. This is because I used the `COPY --link` feature which enhances the build performance and was introduced in Buildx v0.8.  
+> With the Docker Engine 23.0 and Docker Desktop 4.19, Buildx has become the default build client. So you won't have to worry about this when using the latest version.
+
+For example, if you want to build the image with `en` language and `large-v3` model:
 
 ```bash
-docker build --build-arg LANG=ja --build-arg WHISPER_MODEL=large-v3 -t whisperx:large-v3-ja .
+docker build --build-arg LANG=en --build-arg WHISPER_MODEL=large-v3 -t whisperx:large-v3-en .
 ```
 
 If you want to build all images at once, we have [a Docker bake file](https://github.com/jim60105/docker-whisperX/blob/master/docker-bake.hcl) available:
 
+> [!WARNING]
+> [Bake](https://docs.docker.com/build/bake/) is currently an experimental feature, and it may require additional configuration in order to function correctly.
+
 ```bash
 docker buildx bake no_model build
 ```
-
-> [!WARNING]
-> [Bake](https://docs.docker.com/build/bake/) is currently an experimental feature, and it may require additional configuration in order to function correctly.
 
 ### Usage Command
 
