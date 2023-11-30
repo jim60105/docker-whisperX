@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 # When downloading diarization model with auth token, it seems that it is not respecting the TORCH_HOME env variable.
 # So it is necessary to ensure that the CACHE_HOME is set to the exact same path as the default path.
 # https://github.com/jim60105/docker-whisperX/issues/27

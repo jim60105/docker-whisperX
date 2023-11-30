@@ -1,5 +1,4 @@
-# syntax=docker/dockerfile:1.4
-
+# syntax=docker/dockerfile:1
 ARG WHISPER_MODEL=base
 ARG LANG=en
 
