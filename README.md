@@ -45,11 +45,11 @@ In addition, there is also a `no_model` tag that does not include any pre-downlo
 
 ## Preserve the download cache for the align models when working with various languages
 
-You can mount the `/cache` to share align models between containers.  
+You can mount the `/.cache` to share align models between containers.  
 Please use tag `no_model` (`latest`) for this scenario.
 
 ```bash
-docker run --gpus all -it -v ".:/app" -v whisper_cache:/cache ghcr.io/jim60105/whisperx:latest -- --model large-v3 --language en --output_format srt audio.mp3
+docker run --gpus all -it -v ".:/app" -v whisper_cache:/.cache ghcr.io/jim60105/whisperx:latest -- --model large-v3 --language en --output_format srt audio.mp3
 ```
 
 ## Building the Docker Image

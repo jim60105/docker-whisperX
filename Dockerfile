@@ -1,7 +1,13 @@
 ARG WHISPER_MODEL=base
 ARG LANG=en
-ARG TORCH_HOME=/cache/torch
-ARG HF_HOME=/cache/huggingface
+
+# When downloading diarization model with auth token, it seems that it is not respecting the TORCH_HOME env variable.
+# So it is necessary to ensure that the CACHE_HOME is set to the exact same path as the default path.
+# https://github.com/jim60105/docker-whisperX/issues/27
+ARG CACHE_HOME=/.cache
+ARG CONFIG_HOME=/.config
+ARG TORCH_HOME=${CACHE_HOME}/torch
+ARG HF_HOME=${CACHE_HOME}/huggingface
 
 FROM python:3.10-slim as dependencies
 
@@ -64,20 +70,22 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
     apt-get install -y --no-install-recommends libgomp1 libsndfile1; \
     fi
 
+ARG CACHE_HOME
+ARG CONFIG_HOME
 ARG TORCH_HOME
 ARG HF_HOME
+ENV XDG_CACHE_HOME=${CACHE_HOME}
 ENV TORCH_HOME=${TORCH_HOME}
 ENV HF_HOME=${HF_HOME}
 
-COPY --chown=1001 --from=load_model ${TORCH_HOME} ${TORCH_HOME}
-COPY --chown=1001 --from=load_model ${HF_HOME} ${HF_HOME}
+COPY --link --chown=1001 --from=load_model ${CACHE_HOME} ${CACHE_HOME}
+RUN mkdir -p ${CONFIG_HOME} && chown 1001:1001 ${CONFIG_HOME}
 
 ARG WHISPER_MODEL
 ENV WHISPER_MODEL=${WHISPER_MODEL}
 ARG LANG
 ENV LANG=${LANG}
 
-RUN useradd -m -s /bin/bash 1001
 USER 1001
 WORKDIR /app
 
