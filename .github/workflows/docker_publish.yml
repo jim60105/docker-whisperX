@@ -101,15 +101,6 @@ jobs:
           token: ${{ secrets.CR_PAT }}
           tag: ${{ matrix.model }}-cache
 
-      - name: Cache /.cache
-        id: cache
-        uses: actions/cache@v3
-        with:
-          path: /.cache
-          key: docker-${{ matrix.model }}-${{ github.run_id }}
-          restore-keys: |
-            docker-${{ matrix.model }}
-
       - name: Build cache:${{ matrix.model }}
         uses: docker/build-push-action@v4
         with:
@@ -183,13 +174,6 @@ jobs:
         with:
           token: ${{ secrets.CR_PAT }}
           tag: ${{ matrix.model }}-${{ matrix.lang }}
-
-      - name: Restore cache /.cache
-        id: cache-restore
-        uses: actions/cache/restore@v3
-        with:
-          path: /.cache
-          key: docker-${{ matrix.model }}
 
       - name: Build and push:${{ matrix.model }}-${{ matrix.lang }}
         uses: docker/build-push-action@v4
