@@ -8,7 +8,7 @@ ARG CONFIG_HOME=/.config
 ARG TORCH_HOME=${CACHE_HOME}/torch
 ARG HF_HOME=${CACHE_HOME}/huggingface
 
-FROM python:3.10-slim as python
+FROM python:3.11-slim as python
 
 # Setup venv
 RUN python3 -m venv /venv
