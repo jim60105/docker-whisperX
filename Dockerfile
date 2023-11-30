@@ -49,11 +49,9 @@ RUN python3 -c 'from whisperx.vad import load_vad_model; load_vad_model("cpu");'
 ARG WHISPER_MODEL
 RUN python3 -c 'import faster_whisper; model = faster_whisper.WhisperModel("'${WHISPER_MODEL}'")'
 
-# Preload align model
+# Preload align models
 ARG LANG
 COPY load_align_model.py .
-
-# Aligining language(s) as provided)
 RUN for i in ${LANG}; do echo "Aliging lang $i"; python3 load_align_model.py $i; done
 
 
@@ -93,4 +91,6 @@ USER 1001
 WORKDIR /app
 
 STOPSIGNAL SIGINT
-ENTRYPOINT whisperx --model ${WHISPER_MODEL} --language ${LANG} $@
+# Take the first language from LANG env variable
+ENTRYPOINT LANG=$(echo ${LANG} | cut -d ' ' -f1) && \
+    whisperx --model "${WHISPER_MODEL}" --language "${LANG}" "$@" 
