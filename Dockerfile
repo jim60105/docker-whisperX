@@ -92,5 +92,5 @@ WORKDIR /app
 
 STOPSIGNAL SIGINT
 # Take the first language from LANG env variable
-ENTRYPOINT LANG=$(echo ${LANG} | cut -d ' ' -f1) && \
+ENTRYPOINT LANG=$(echo ${LANG} | cut -d ' ' -f1); \
     whisperx --model "${WHISPER_MODEL}" --language "${LANG}" "$@" 
