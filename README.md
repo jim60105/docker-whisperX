@@ -22,7 +22,7 @@ Install an NVIDIA GPU Driver if you do not already have one installed.
 Install the NVIDIA Container Toolkit with this guide.  
 <https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html>
 
-## Available Pre-build Image
+## Available Pre-built Image
 
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/jim60105/docker-whisperX/master?label=%20&style=for-the-badge) ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=%20&style=for-the-badge)
 
@@ -115,7 +115,9 @@ It is important to mention that it is _NOT_ necessary obtaining a license from R
 
 Despite my initial hesitation, I made the decision not to utilize the UBI version as the default image. The _Python official image_ has a significantly larger user base compared to _UBI_, and I believe that opting for it aligns better with public expectations. Nevertheless, I would still suggest giving the _UBI_ version a try.
 
-You can get the pre-build image at tag [ubi-no_model](https://ghcr.io/jim60105/whisperx:ubi-no_model). Notice that only no_model is available. Feel free to build your own image with the [Dockerfile.ubi](Dockerfile.ubi) for your needs. This Dockerfile supports the same build arguments as the default one.
+Please refer to [the latest vulnerability scan report](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml?query=is%3Asuccess) from our scanning workflow artifact. You can see that the _UBI_ version has fewer vulnerabilities compared to the _Python official image_ version.
+
+You can get the pre-built image at tag [ubi-no_model](https://ghcr.io/jim60105/whisperx:ubi-no_model). Notice that only no_model is available. Feel free to build your own image with the [Dockerfile.ubi](Dockerfile.ubi) for your needs. This Dockerfile supports the same build arguments as the default one.
 
 ```bash
 docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:ubi-no_model -- --model tiny --language en --output_format srt audio.mp3

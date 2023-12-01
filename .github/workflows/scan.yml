@@ -5,43 +5,66 @@ on:
     workflows: [docker_publish]
     types: [completed]
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
 jobs:
   scan-python:
     name: Scan Python official base image
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows/scan/html.tpl
+          sparse-checkout-cone-mode: false
+
       - name: Run Trivy vulnerability scanner for Python official image
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.14.0
         with:
           image-ref: "ghcr.io/jim60105/whisperx:no_model"
           vuln-type: "os,library"
           scanners: vuln
           severity: "CRITICAL,HIGH"
-          format: 'sarif'
-          output: 'trivy-results-python.sarif'
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+          format: "template"
+          template: "@.github/workflows/scan/html.tpl"
+          output: "trivy-results-python.html"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
         with:
-          sarif_file: 'trivy-results-python.sarif'
-          category: 'Python Official Image'
+          name: trivy-results
+          path: trivy-results-python.html
+          retention-days: 90
 
   scan-ubi:
     name: Scan Red Hat UBI base image
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows/scan/html.tpl
+          sparse-checkout-cone-mode: false
+
       - name: Run Trivy vulnerability scanner for UBI image
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.14.0
         with:
           image-ref: "ghcr.io/jim60105/whisperx:ubi-no_model"
           vuln-type: "os,library"
           scanners: vuln
           severity: "CRITICAL,HIGH"
-          format: 'sarif'
-          output: 'trivy-results-ubi.sarif'
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
+          format: "template"
+          template: "@.github/workflows/scan/html.tpl"
+          output: "trivy-results-ubi.html"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
         with:
-          sarif_file: 'trivy-results-ubi.sarif'
-          category: 'Red Hat UBI Image'
+          name: trivy-results
+          path: trivy-results-ubi.html
+          retention-days: 90
