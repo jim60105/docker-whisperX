@@ -188,33 +188,3 @@ jobs:
             LANG=${{ matrix.lang }}
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha
-  
-  docker-clean-cache:
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      # max-parallel: 6
-      matrix:
-        model:
-          - tiny
-          - base
-          - small
-          - medium
-          - large-v2
-          - large-v3
-    needs: docker
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: true
-
-      - name: Setup docker
-        id: setup
-        uses: ./.github/workflows/docker-reused-setup-steps
-        with:
-          token: ${{ secrets.CR_PAT }}
-
-      - name: Untag cache
-        run: docker image rm --no-prune ghcr.io/jim60105/whisperx:cache-${{ matrix.model }}
-
