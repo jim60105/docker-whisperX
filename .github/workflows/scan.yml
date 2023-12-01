@@ -6,7 +6,7 @@ on:
     types: [completed]
 
 jobs:
-  scan:
+  scan-python:
     name: Scan Python official base image
     runs-on: ubuntu-latest
     if: github.event.workflow_run.conclusion == 'success'
@@ -15,9 +15,16 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "ghcr.io/jim60105/whisperx:no_model"
-          format: "table"
           vuln-type: "os,library"
+          scanners: vuln
           severity: "CRITICAL,HIGH"
+          format: 'sarif'
+          output: 'trivy-results-python.sarif'
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results-python.sarif'
+          category: 'Python Official Image'
 
   scan-ubi:
     name: Scan Red Hat UBI base image
@@ -28,6 +35,13 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: "ghcr.io/jim60105/whisperx:ubi-no_model"
-          format: "table"
           vuln-type: "os,library"
+          scanners: vuln
           severity: "CRITICAL,HIGH"
+          format: 'sarif'
+          output: 'trivy-results-ubi.sarif'
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results-ubi.sarif'
+          category: 'Red Hat UBI Image'
