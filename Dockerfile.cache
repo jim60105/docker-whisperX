@@ -3,7 +3,7 @@ ARG WHISPER_MODEL=base
 ARG LANG=en
 ARG CACHE_HOME=/.cache
 
-FROM ghcr.io/jim60105/whisperx:no_model as load_whisper
+FROM ghcr.io/jim60105/whisperx:no_model as cache
 
 # Preload vad model
 RUN python3 -c 'from whisperx.vad import load_vad_model; load_vad_model("cpu");'
@@ -12,7 +12,7 @@ RUN python3 -c 'from whisperx.vad import load_vad_model; load_vad_model("cpu");'
 ARG WHISPER_MODEL
 RUN python3 -c 'import faster_whisper; model = faster_whisper.WhisperModel("'${WHISPER_MODEL}'")'
 
-FROM load_whisper as load_align
+FROM ghcr.io/jim60105/whisperx:cache-${WHISPER_MODEL} as load_align
 
 # Preload align models
 ARG LANG
@@ -20,7 +20,7 @@ COPY load_align_model.py .
 RUN for i in ${LANG}; do echo "Aliging lang $i"; python3 load_align_model.py $i; done
 
 
-FROM ghcr.io/jim60105/whisperx:no_model
+FROM ghcr.io/jim60105/whisperx:no_model as final
 
 ARG CACHE_HOME
 COPY --link --chown=1001 --from=load_align ${CACHE_HOME} ${CACHE_HOME}
