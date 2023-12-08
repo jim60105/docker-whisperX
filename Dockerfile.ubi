@@ -34,7 +34,7 @@ FROM python as build
 RUN microdnf -y install git && \
     microdnf clean all
 
-RUN --mount=type=cache,target=/root/.cache/pip pip install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
+RUN --mount=type=cache,target=/root/.cache/pip pip install torch==2.1.1 torchaudio==2.1.1 --extra-index-url https://download.pytorch.org/whl/cu118
 
 # Install whisperX
 COPY ./whisperX /code
@@ -62,11 +62,13 @@ ARG PATH="/venv/bin:$PATH"
 
 # Preload align models
 ARG LANG
-COPY load_align_model.py .
-RUN for i in ${LANG}; do echo "Aliging lang $i"; python3 load_align_model.py $i; done
+COPY load_align_model.py /
+RUN for i in ${LANG}; do echo "Aliging lang $i"; python3 /load_align_model.py "$i"; done
 
 
 FROM python as final
+
+RUN pip uninstall -y setuptools pip
 
 # ffmpeg
 COPY --link --from=mwader/static-ffmpeg:6.0 /ffmpeg /usr/local/bin/
@@ -96,5 +98,4 @@ WORKDIR /app
 
 STOPSIGNAL SIGINT
 # Take the first language from LANG env variable
-ENTRYPOINT LANG=$(echo ${LANG} | cut -d ' ' -f1); \
-    whisperx --model "${WHISPER_MODEL}" --language "${LANG}" "$@" 
+ENTRYPOINT ["sh", "-c", "LANG=$(echo ${LANG} | cut -d ' ' -f1); whisperx --model \"${WHISPER_MODEL}\" --language \"${LANG}\" \"$@\""]

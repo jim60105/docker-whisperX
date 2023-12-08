@@ -69,4 +69,4 @@ USER 1001
 WORKDIR /app
 
 STOPSIGNAL SIGINT
-ENTRYPOINT whisperx $@
+ENTRYPOINT ["sh", "-c", "whisperx \"$@\""]

@@ -1,0 +1,2 @@
+ignored:
+  - DL3042 # Avoid use of cache directory with pip. Use `pip install --no-cache-dir <package>`

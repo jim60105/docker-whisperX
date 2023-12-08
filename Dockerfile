@@ -16,24 +16,27 @@ FROM python:3.11-slim as python
 RUN python3 -m venv /venv
 ARG PATH="/venv/bin:$PATH"
 ENV PATH=${PATH}
-RUN --mount=type=cache,target=/root/.cache/pip pip install --upgrade pip setuptools
 
 # Missing dependencies for arm64
 # https://github.com/jim60105/docker-whisperX/issues/14
 ARG TARGETPLATFORM
 RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-    apt-get update && apt-get install -y --no-install-recommends libgomp1 libsndfile1; \
+    apt-get update && apt-get install -y --no-install-recommends libgomp1=12.2.0-14 libsndfile1=1.2.0-1 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*; \
     fi
 
 
 FROM python as build
 
 # Install requirements
-RUN --mount=type=cache,target=/root/.cache/pip pip install torch torchaudio --extra-index-url https://download.pytorch.org/whl/cu118
+RUN --mount=type=cache,target=/root/.cache/pip pip install torch==2.1.1 torchaudio==2.1.1 --extra-index-url https://download.pytorch.org/whl/cu118
 
 # Add git
 ARG DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y --no-install-recommends git
+RUN apt-get update && apt-get install -y --no-install-recommends git=1:2.39.2-1.1 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install whisperX
 COPY ./whisperX /code
@@ -61,11 +64,13 @@ ARG PATH="/venv/bin:$PATH"
 
 # Preload align models
 ARG LANG
-COPY load_align_model.py .
-RUN for i in ${LANG}; do echo "Aliging lang $i"; python3 load_align_model.py $i; done
+COPY load_align_model.py /
+RUN for i in ${LANG}; do echo "Aliging lang $i"; python3 /load_align_model.py "$i"; done
 
 
 FROM python as final
+
+RUN pip uninstall -y setuptools pip
 
 # ffmpeg
 COPY --link --from=mwader/static-ffmpeg:6.0 /ffmpeg /usr/local/bin/
@@ -95,5 +100,4 @@ WORKDIR /app
 
 STOPSIGNAL SIGINT
 # Take the first language from LANG env variable
-ENTRYPOINT LANG=$(echo ${LANG} | cut -d ' ' -f1); \
-    whisperx --model "${WHISPER_MODEL}" --language "${LANG}" "$@" 
+ENTRYPOINT ["sh", "-c", "LANG=$(echo ${LANG} | cut -d ' ' -f1); whisperx --model \"${WHISPER_MODEL}\" --language \"${LANG}\" \"$@\""]

@@ -16,8 +16,8 @@ FROM ghcr.io/jim60105/whisperx:cache-${WHISPER_MODEL} as load_align
 
 # Preload align models
 ARG LANG
-COPY load_align_model.py .
-RUN for i in ${LANG}; do echo "Aliging lang $i"; python3 load_align_model.py $i; done
+COPY load_align_model.py /
+RUN for i in ${LANG}; do echo "Aliging lang $i"; python3 /load_align_model.py "$i"; done
 
 
 FROM ghcr.io/jim60105/whisperx:no_model as final
@@ -31,5 +31,4 @@ ARG LANG
 ENV LANG=${LANG}
 
 # Take the first language from LANG env variable
-ENTRYPOINT LANG=$(echo ${LANG} | cut -d ' ' -f1); \
-    whisperx --model "${WHISPER_MODEL}" --language "${LANG}" "$@" 
+ENTRYPOINT ["sh", "-c", "LANG=$(echo ${LANG} | cut -d ' ' -f1); whisperx --model \"${WHISPER_MODEL}\" --language \"${LANG}\" \"$@\""]
