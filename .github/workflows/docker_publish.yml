@@ -42,6 +42,21 @@ jobs:
           labels: ${{ steps.setup.outputs.labels }}
           platforms: linux/amd64, linux/arm64
 
+      - name: Test ubi-no_model docker image
+        run: |
+          docker run -v ".:/app" ghcr.io/jim60105/whisperx:ubi-no_model -- --model base --language en --device cpu --compute_type int8 --output_format srt .github/workflows/test/en.webm;
+          if [ ! -f en.srt ]; then
+            echo "The en.srt file does not exist"
+            exit 1
+          fi
+          echo "cat en.srt:";
+          cat en.srt;
+          if ! grep -qi 'no' en.srt; then
+            echo "The en.srt file does not contain the word 'no'"
+            exit 1
+          fi
+          echo "Test passed."
+
   # Run the no_model build first ensure that the code at least builds
   docker-no_model:
     # The type of runner that the job will run on
@@ -70,6 +85,21 @@ jobs:
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Test no_model docker image
+        run: |
+          docker run -v ".:/app" ghcr.io/jim60105/whisperx:no_model -- --model base --language en --device cpu --compute_type int8 --output_format srt .github/workflows/test/en.webm;
+          if [ ! -f en.srt ]; then
+            echo "The en.srt file does not exist"
+            exit 1
+          fi
+          echo "cat en.srt:";
+          cat en.srt;
+          if ! grep -qi 'no' en.srt; then
+            echo "The en.srt file does not contain the word 'no'"
+            exit 1
+          fi
+          echo "Test passed."
 
   # Download whisper model cache
   docker-cache:
@@ -188,3 +218,46 @@ jobs:
             LANG=${{ matrix.lang }}
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha
+
+  test-large-v3-zh:
+    name: Test large-v3-zh docker image
+    runs-on: ubuntu-latest
+    needs: docker
+    steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: true
+
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: false
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows/test/**
+          sparse-checkout-cone-mode: false
+
+      - name: Test large-v3-zh docker image
+        run: |
+          docker run -v ".:/app" ghcr.io/jim60105/whisperx:large-v3-zh -- --device cpu --compute_type int8 --output_format srt .github/workflows/test/zh.webm;
+          if [ ! -f zh.srt ]; then
+            echo "The zh.srt file does not exist"
+            exit 1
+          fi
+          echo "cat zh.srt:";
+          cat zh.srt;
+          if ! grep -qi -e '充满' -e '充滿' zh.srt; then
+            echo "The zh.srt file does not contain the word '充满' or '充滿'"
+            exit 1
+          fi
+          echo "Test passed."
