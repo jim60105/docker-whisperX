@@ -181,6 +181,7 @@ jobs:
           - te
           - hi
           - ca
+          - ml
         model:
           - tiny
           - base

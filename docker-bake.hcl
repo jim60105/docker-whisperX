@@ -1,5 +1,5 @@
 group "default" {
-  targets = ["no_model", "build"]
+  targets = ["no_model", "ubi-no_model", "build"]
 }
 
 variable "WHISPER_MODEL" {
@@ -48,6 +48,7 @@ target "build" {
       "te",
       "hi",
       "ca",
+      "ml",
     ]
   }
 
