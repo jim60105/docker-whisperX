@@ -1,6 +1,6 @@
 # docker-whisperX
 
-[![CodeFactor](https://www.codefactor.io/repository/github/jim60105/docker-whisperx/badge)](https://www.codefactor.io/repository/github/jim60105/docker-whisperx)
+[![CodeFactor](https://www.codefactor.io/repository/github/jim60105/docker-whisperx/badge?style=for-the-badge)](https://www.codefactor.io/repository/github/jim60105/docker-whisperx) [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/scan.yml?label=IMAGE%20SCAN&style=for-the-badge)](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml)
 
 This is the docker image for [WhisperX: Automatic Speech Recognition with Word-Level Timestamps (and Speaker Diarization)](https://github.com/m-bain/whisperX) from the community.
 
@@ -26,11 +26,11 @@ Install the NVIDIA Container Toolkit with this guide.
 
 ## Available Pre-built Image
 
-![GitHub last commit (branch)](https://img.shields.io/github/last-commit/jim60105/docker-whisperX/master?label=%20&style=for-the-badge) ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=%20&style=for-the-badge)
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=DOCKER%20BUILD&style=for-the-badge) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/jim60105/docker-whisperX/master?label=DATE&style=for-the-badge)
 
 > [!NOTE]  
-> The WhisperX code version in these images corresponds to the git submodule commit hash.  
-> The auto update CI runs weekly to update the submodule and rebuild the images.
+> The WhisperX code base in these images aligns with the git submodule commit hash.  
+> I have [a scheduled CI workflow](https://github.com/jim60105/docker-whisperX/actions/workflows/submodule_update.yml) runs weekly to target on [the main branch](https://github.com/m-bain/whisperX/tree/main) and rebuild all docker images.
 
 ```bash
 docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:base-en     -- --output_format srt audio.mp3
@@ -47,7 +47,8 @@ In addition, there is also a `no_model` tag that does not include any pre-downlo
 
 > [!TIP]  
 > These pre-built images are built with the [Dockerfile.cache](Dockerfile.cache), which divides the [Dockerfile](Dockerfile) into multiple stages to enhance the speed of the CI workflow.  
-> While it is designed to work the same as the default Dockerfile, it is important to exercise caution when debugging and contributing.
+> Generating large docker images within a matrix on GitHub runner is quite challenging. I had made significant adjustments to the building process in order to make it works.  
+> Although it is intended to function the same as the default Dockerfile, it is crucial to exercise caution when debugging and contributing.
 
 ## Preserve the download cache for the align models when working with various languages
 
@@ -72,7 +73,7 @@ The [Dockerfile](Dockerfile) builds the image contained models. It accepts two b
 
 - `WHISPER_MODEL`: The model name. The default is `base`. See [fast-whisper](https://huggingface.co/guillaumekln) for supported models.
 
-In case of multiple language alignments needed, use space separated list of languages `"LANG=pl fr en"` when building the image. Also note that WhisperX is not doing well to handle multiple languages within the same audio file. Even if you do not provide the language parameter, it will still recognize the language (or fallback to en) and use it for choosing the alignment model. Alignment models are language specific. This instruction is simply for embedding multiple models into a docker image.
+In case of multiple language alignments needed, use space separated list of languages `"LANG=pl fr en"` when building the image. Also note that WhisperX is not doing well to handle multiple languages within the same audio file. Even if you do not provide the language parameter, it will still recognize the language (or fallback to en) and use it for choosing the alignment model. Alignment models are language specific. **This instruction is simply for embedding multiple alignment models into a docker image.**
 
 ### Build Command
 
@@ -92,7 +93,7 @@ If you want to build all images at once, we have [a Docker bake file](docker-bak
 > [Bake](https://docs.docker.com/build/bake/) is currently an experimental feature, and it may require additional configuration in order to function correctly.
 
 ```bash
-docker buildx bake no_model build
+docker buildx bake build no_model ubi-no_model
 ```
 
 ### Usage Command
@@ -107,19 +108,19 @@ docker run --gpus all -it -v ".:/app" whisperx:large-v3-ja -- --output_format sr
 > Remember to prepend `--` before the arguments.  
 > `--model` and `--language` args are defined in Dockerfile, no need to specify.
 
-## UBI9 Image
+## Red Hat UBI based Image
 
-I have created an alternative [Dockerfile.ubi](Dockerfile.ubi) that is based on the **Red Hat UBI** image, unlike the default one which used the **Python official image** as the base image. If you are a Red Hat customer, I believe you will find its benefits.
+I have created an alternative [Dockerfile.ubi](Dockerfile.ubi) that is based on the **Red Hat Universal Base Image (UBI)** image, unlike the default one which used the **Python official image** as the base image. If you are a Red Hat subscriber, I believe you will find its benefits.
 
-> With the release of the Red Hat Universal Base Image (UBI), you can now take advantage of the greater reliability, security, and performance of official Red Hat container images where OCI-compliant Linux containers run - whether you're a customer or not. --[Red Hat](https://www.redhat.com/en/blog/introducing-red-hat-universal-base-image)
+> With the release of the Red Hat Universal Base Image (UBI), you can now take advantage of the greater reliability, security, and performance of official Red Hat container images where OCI-compliant Linux containers run - whether you're a customer or not. --[Red Hat blog](https://www.redhat.com/en/blog/introducing-red-hat-universal-base-image)
 
 It is important to mention that it is _NOT_ necessary obtaining a license from Red Hat to use UBI, however, if you are the subscriber and runs it on RHEL/OpenShift, you can get supports from Red Hat.
 
-Despite my initial hesitation, I made the decision not to utilize the UBI version as the default image. The _Python official image_ has a significantly larger user base compared to _UBI_, and I believe that opting for it aligns better with public expectations. Nevertheless, I would still suggest giving the _UBI_ version a try.
+Despite my initial hesitation, I made the decision not to utilize the _UBI_ version as the default image. The _Python official image_ has a significantly larger user base compared to _UBI_, and I believe that opting for it aligns better with public expectations. Nevertheless, I would still suggest giving the _UBI_ version a try.
 
 Please refer to [the latest vulnerability scan report](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml?query=is%3Asuccess) from our scanning workflow artifact. You can see that the _UBI_ version has fewer vulnerabilities compared to the _Python official image_ version.
 
-You can get the pre-built image at tag [ubi-no_model](https://ghcr.io/jim60105/whisperx:ubi-no_model). Notice that only no_model is available. Feel free to build your own image with the [Dockerfile.ubi](Dockerfile.ubi) for your needs. This Dockerfile supports the same build arguments as the default one.
+You can get the pre-built image at tag [ubi-no_model](https://github.com/jim60105/docker-whisperX/pkgs/container/whisperx/156402794?tag=ubi-no_model). Notice that only `no_model` is available. Feel free to build your own image with the [Dockerfile.ubi](Dockerfile.ubi) for your needs. This Dockerfile supports the same build arguments as the default one.
 
 ```bash
 docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:ubi-no_model -- --model tiny --language en --output_format srt audio.mp3
@@ -127,7 +128,7 @@ docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:ubi-no_model -- 
 
 ## LICENSE
 
-The main program, WhisperX, is distributed under [the BSD-4 license](https://github.com/m-bain/whisperX/blob/main/LICENSE).  
-Please consult their repository for access to the source code and licenses.
+> The main program, WhisperX, is distributed under [the BSD-4 license](https://github.com/m-bain/whisperX/blob/main/LICENSE).  
+Please consult their repository for access to the source code and license.
 
-The Dockerfile and CI workflow files in this repository are licensed under [the MIT license](/LICENSE).
+The Dockerfile and CI workflow files in this repository are licensed under [the MIT license](LICENSE).
