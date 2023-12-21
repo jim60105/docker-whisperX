@@ -49,6 +49,8 @@ target "build" {
       "hi",
       "ca",
       "ml",
+      "no",
+      "nn",
     ]
   }
 
