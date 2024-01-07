@@ -1,2 +1,7 @@
 ignored:
+  - DL3041 # Specify version with `dnf install -y <package>-<version>`.
   - DL3042 # Avoid use of cache directory with pip. Use `pip install --no-cache-dir <package>`
+  - DL4006 #Set the SHELL option -o pipefail before RUN with a pipe in it
+  - DL3013 # Pin versions in pip. Instead of `pip install <package>` use `pip install <package>==<version>`
+  - SC2015 # Note that A && B || C is not if-then-else. C may run when A is true.
+  - DL3006 # Always tag the version of an image explicitly

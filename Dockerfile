@@ -84,7 +84,7 @@ COPY --link --from=mwader/static-ffmpeg:6.1.1 /ffprobe /usr/local/bin/
 
 # Create user
 RUN groupadd -g $UID $UID && \
-    useradd -u $UID -g $UID -m -s /bin/sh -N $UID
+    useradd -l -u $UID -g $UID -m -s /bin/sh -N $UID
 
 # Copy dist and support arbitrary user ids (OpenShift best practice)
 # https://docs.openshift.com/container-platform/4.14/openshift_images/create-images.html#use-uid_create-images
