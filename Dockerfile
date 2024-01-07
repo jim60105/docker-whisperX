@@ -91,6 +91,7 @@ RUN groupadd -g $UID $UID && \
 COPY --chown=$UID:0 --chmod=774 \
     --from=build /root/.local /home/$UID/.local
 ENV PATH="/home/$UID/.local/bin:$PATH"
+ENV PYTHONPATH="${PYTHONPATH}:/home/$UID/.local/lib/python3.11/site-packages" 
 
 ARG CACHE_HOME
 ARG CONFIG_HOME
