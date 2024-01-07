@@ -82,7 +82,8 @@ target "no_model" {
 }
 
 target "ubi-no_model" {
-  dockerfile = "Dockerfile.ubi-no_model"
+  dockerfile = "ubi.Dockerfile"
+  target     = "no_model"
   tags = [
     "ghcr.io/jim60105/whisperx:ubi-no_model"
   ]

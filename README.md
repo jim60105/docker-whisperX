@@ -82,6 +82,12 @@ For example, if you want to build the image with `en` language and `large-v3` mo
 docker build --build-arg LANG=en --build-arg WHISPER_MODEL=large-v3 -t whisperx:large-v3-en .
 ```
 
+If you want to build the image without any pre-downloaded models:
+
+```bash
+docker build --target no_model -t whisperx:no_model .
+```
+
 If you want to build all images at once, we have [a Docker bake file](docker-bake.hcl) available:
 
 > [!WARNING]  
@@ -105,7 +111,7 @@ docker run --gpus all -it -v ".:/app" whisperx:large-v3-ja -- --output_format sr
 
 ## Red Hat UBI based Image
 
-I have created an alternative [Dockerfile.ubi](Dockerfile.ubi) that is based on the **Red Hat Universal Base Image (UBI)** image, unlike the default one which used the **Python official image** as the base image. If you are a Red Hat subscriber, I believe you will find its benefits.
+I have created an alternative [ubi.Dockerfile](ubi.Dockerfile) that is based on the **Red Hat Universal Base Image (UBI)** image, unlike the default one which used the **Python official image** as the base image. If you are a Red Hat subscriber, I believe you will find its benefits.
 
 > With the release of the Red Hat Universal Base Image (UBI), you can now take advantage of the greater reliability, security, and performance of official Red Hat container images where OCI-compliant Linux containers run - whether you're a customer or not. --[Red Hat blog](https://www.redhat.com/en/blog/introducing-red-hat-universal-base-image)
 
@@ -115,7 +121,7 @@ Despite my initial hesitation, I made the decision not to utilize the _UBI_ vers
 
 Please refer to [the latest vulnerability scan report](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml?query=is%3Asuccess) from our scanning workflow artifact. You can see that the _UBI_ version has fewer vulnerabilities compared to the _Python official image_ version.
 
-You can get the pre-built image at tag [ubi-no_model](https://github.com/jim60105/docker-whisperX/pkgs/container/whisperx/156402794?tag=ubi-no_model). Notice that only `no_model` is available. Feel free to build your own image with the [Dockerfile.ubi](Dockerfile.ubi) for your needs. This Dockerfile supports the same build arguments as the default one.
+You can get the pre-built image at tag [ubi-no_model](https://github.com/jim60105/docker-whisperX/pkgs/container/whisperx/156402794?tag=ubi-no_model). Notice that only `no_model` is available. Feel free to build your own image with the [ubi.Dockerfile](ubi.Dockerfile) for your needs. This Dockerfile supports the same build arguments as the default one.
 
 ```bash
 docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:ubi-no_model -- --model tiny --language en --output_format srt audio.mp3

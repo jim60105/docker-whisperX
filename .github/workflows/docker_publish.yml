@@ -36,8 +36,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./Dockerfile.ubi-no_model
+          file: ./ubi.Dockerfile
           push: true
+          target: no_model
           tags: ${{ steps.setup.outputs.tags }}
           labels: ${{ steps.setup.outputs.labels }}
           platforms: linux/amd64, linux/arm64
