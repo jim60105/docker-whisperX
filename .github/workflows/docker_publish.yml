@@ -78,8 +78,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./Dockerfile.no_model
+          file: ./Dockerfile
           push: true
+          target: no_model
           tags: ${{ steps.setup.outputs.tags }}
           labels: ${{ steps.setup.outputs.labels }}
           platforms: linux/amd64, linux/arm64
@@ -135,9 +136,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./Dockerfile.cache
-          target: cache
+          file: ./Dockerfile
           push: true
+          target: load_whisper
           tags: ${{ steps.setup.outputs.tags }}
           labels: ${{ steps.setup.outputs.labels }}
           build-args: |
@@ -211,7 +212,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./Dockerfile.cache
+          file: ./Dockerfile
           target: final
           push: true
           tags: ${{ steps.setup.outputs.tags }}
@@ -219,6 +220,8 @@ jobs:
           build-args: |
             WHISPER_MODEL=${{ matrix.model }}
             LANG=${{ matrix.lang }}
+            LOAD_WHISPER_STAGE=ghcr.io/jim60105/whisperx:cache-${{ matrix.model }}
+            NO_MODEL_STAGE=ghcr.io/jim60105/whisperx:no_model
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha
 

@@ -70,7 +70,8 @@ target "build" {
 }
 
 target "no_model" {
-  dockerfile = "Dockerfile.no_model"
+  dockerfile = "Dockerfile"
+  target     = "no_model"
   tags = [
     "ghcr.io/jim60105/whisperx:latest",
     "ghcr.io/jim60105/whisperx:no_model"

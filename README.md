@@ -45,11 +45,6 @@ You can find all available tags at [ghcr.io](https://github.com/jim60105/docker-
 
 In addition, there is also a `no_model` tag that does not include any pre-downloaded models, also referred to as `latest`.
 
-> [!TIP]  
-> These pre-built images are built with the [Dockerfile.cache](Dockerfile.cache), which divides the [Dockerfile](Dockerfile) into multiple stages to enhance the speed of the CI workflow.  
-> Generating large docker images within a matrix on GitHub runner is quite challenging. I had made significant adjustments to the building process in order to make it works.  
-> Although it is intended to function the same as the default Dockerfile, it is crucial to exercise caution when debugging and contributing.
-
 ## Preserve the download cache for the align models when working with various languages
 
 You can mount the `/.cache` to share align models between containers.  
