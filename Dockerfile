@@ -114,13 +114,12 @@ WORKDIR /app
 VOLUME [ "/app" ]
 
 STOPSIGNAL SIGINT
-
 ENTRYPOINT ["sh", "-c", "whisperx \"$@\""]
 
 ######
 # load_whisper stage: This stage will be tagged for caching in CI.
 ######
-FROM no_model as load_whisper
+FROM ${NO_MODEL_STAGE} as load_whisper
 
 ARG TORCH_HOME
 ARG HF_HOME

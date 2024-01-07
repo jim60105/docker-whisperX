@@ -144,6 +144,7 @@ jobs:
           labels: ${{ steps.setup.outputs.labels }}
           build-args: |
             WHISPER_MODEL=${{ matrix.model }}
+            NO_MODEL_STAGE=ghcr.io/jim60105/whisperx:no_model
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha
 
