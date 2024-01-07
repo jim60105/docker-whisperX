@@ -43,7 +43,7 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
 FROM base as build
 
 # Install build time requirements
-RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs -y install git python3.11-pip && \
+RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs -y install git python3.11-pip findutils && \
     microdnf clean all
 
 # RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
