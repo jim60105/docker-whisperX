@@ -66,7 +66,7 @@ The [Dockerfile](Dockerfile) builds the image contained models. It accepts two b
 
 - `LANG`: The language to transcribe. The default is `en`. See [here](https://github.com/jim60105/docker-whisperX/blob/master/load_align_model.py) for supported languages.  
 
-- `WHISPER_MODEL`: The model name. The default is `base`. See [fast-whisper](https://huggingface.co/guillaumekln) for supported models.
+- `WHISPER_MODEL`: The model name. The default is `base`. See [fast-whisper](https://huggingface.co/Systran) for supported models.
 
 In case of multiple language alignments needed, use space separated list of languages `"LANG=pl fr en"` when building the image. Also note that WhisperX is not doing well to handle multiple languages within the same audio file. Even if you do not provide the language parameter, it will still recognize the language (or fallback to en) and use it for choosing the alignment model. Alignment models are language specific. **This instruction is simply for embedding multiple alignment models into a docker image.**
 
