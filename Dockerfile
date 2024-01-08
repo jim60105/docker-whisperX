@@ -150,6 +150,9 @@ RUN --mount=source=load_align_model.py,target=load_align_model.py \
 ######
 FROM ${NO_MODEL_STAGE} as final
 
+ARG UID
+
+ARG CACHE_HOME
 COPY --link --chown=$UID:0 --chmod=774 \
     --from=load_align ${CACHE_HOME} ${CACHE_HOME}
 
