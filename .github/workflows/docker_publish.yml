@@ -32,22 +32,20 @@ jobs:
           token: ${{ secrets.CR_PAT }}
           tag: ubi-no_model
 
-      - name: Build and push:ubi-no_model
+      - name: Build:ubi-no_model
         uses: docker/build-push-action@v4
         id: build
         with:
           context: .
           file: ./ubi.Dockerfile
-          push: true
           load: true
           target: no_model
-          tags: ${{ steps.setup.outputs.tags }}
           labels: ${{ steps.setup.outputs.labels }}
-          platforms: linux/amd64, linux/arm64
+          platforms: linux/amd64
 
       - name: Test ubi-no_model docker image
         run: |
-          docker run --group-add 0 -v ".:/app" ghcr.io/jim60105/whisperx:ubi-no_model@${{ steps.build.outputs.digest }} -- --model base --language en --device cpu --compute_type int8 --output_format srt .github/workflows/test/en.webm;
+          docker run --group-add 0 -v ".:/app" ${{ steps.build.outputs.imageid }} -- --model base --language en --device cpu --compute_type int8 --output_format srt .github/workflows/test/en.webm;
           if [ ! -f en.srt ]; then
             echo "The en.srt file does not exist"
             exit 1
@@ -60,12 +58,23 @@ jobs:
           fi
           echo "Test passed."
 
+      - name: Build and push:ubi-no_model
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./ubi.Dockerfile
+          push: true
+          target: no_model
+          tags: ${{ steps.setup.outputs.tags }}
+          labels: ${{ steps.setup.outputs.labels }}
+          platforms: linux/amd64, linux/arm64
+
   # Run the no_model build first ensure that the code at least builds
   docker-no_model:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     outputs:
-      digest: ${{ steps.build.outputs.digest }}
+      digest: ${{ steps.publish.outputs.digest }}
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout
@@ -79,24 +88,22 @@ jobs:
         with:
           token: ${{ secrets.CR_PAT }}
 
-      - name: Build and push:no_model
+      - name: Build:no_model
         uses: docker/build-push-action@v4
         id: build
         with:
           context: .
           file: ./Dockerfile
-          push: true
           load: true
           target: no_model
-          tags: ${{ steps.setup.outputs.tags }}
           labels: ${{ steps.setup.outputs.labels }}
-          platforms: linux/amd64, linux/arm64
+          platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Test no_model docker image
         run: |
-          docker run --group-add 0 -v ".:/app" ghcr.io/jim60105/whisperx:no_model@${{ steps.build.outputs.digest }} -- --model base --language en --device cpu --compute_type int8 --output_format srt .github/workflows/test/en.webm;
+          docker run --group-add 0 -v ".:/app" ${{ steps.build.outputs.imageid }} -- --model base --language en --device cpu --compute_type int8 --output_format srt .github/workflows/test/en.webm;
           if [ ! -f en.srt ]; then
             echo "The en.srt file does not exist"
             exit 1
@@ -109,12 +116,24 @@ jobs:
           fi
           echo "Test passed."
 
+      - name: Build and push:no_model
+        uses: docker/build-push-action@v4
+        id: publish
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          target: no_model
+          tags: ${{ steps.setup.outputs.tags }}
+          labels: ${{ steps.setup.outputs.labels }}
+          platforms: linux/amd64, linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   # Download whisper model cache
   docker-cache:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    outputs:
-      digest: ${{ steps.build.outputs.digest }}
     strategy:
       fail-fast: true
       matrix:
