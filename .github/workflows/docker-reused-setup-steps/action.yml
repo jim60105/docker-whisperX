@@ -35,7 +35,7 @@ runs:
         haskell: true
         large-packages: true
         docker-images: true
-        swap-storage: false
+        swap-storage: true
 
     - name: Docker meta data:${{ inputs.tag }}
       id: meta
