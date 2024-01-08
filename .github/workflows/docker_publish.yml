@@ -42,6 +42,8 @@ jobs:
           target: no_model
           labels: ${{ steps.setup.outputs.labels }}
           platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Test ubi-no_model docker image
         run: |
@@ -68,6 +70,8 @@ jobs:
           tags: ${{ steps.setup.outputs.tags }}
           labels: ${{ steps.setup.outputs.labels }}
           platforms: linux/amd64, linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   # Run the no_model build first ensure that the code at least builds
   docker-no_model:
@@ -174,7 +178,6 @@ jobs:
             WHISPER_MODEL=${{ matrix.model }}
             NO_MODEL_STAGE=ghcr.io/jim60105/whisperx:no_model@${{ needs.docker-no_model.outputs.digest }}
           platforms: linux/amd64, linux/arm64
-          cache-from: type=gha
 
   # Run the rest of the builds in parallel
   docker:
@@ -255,7 +258,6 @@ jobs:
             LOAD_WHISPER_STAGE=ghcr.io/jim60105/whisperx:cache-${{ matrix.model }}
             NO_MODEL_STAGE=ghcr.io/jim60105/whisperx:no_model@${{ needs.docker-no_model.outputs.digest }}
           platforms: linux/amd64, linux/arm64
-          cache-from: type=gha
 
   test-large-v3-zh:
     name: Test large-v3-zh docker image
