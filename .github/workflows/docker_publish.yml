@@ -69,6 +69,8 @@ jobs:
           target: no_model
           tags: ${{ steps.setup.outputs.tags }}
           labels: ${{ steps.setup.outputs.labels }}
+          build-args: |
+            GIT_SHA=${{ github.sha }}
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -130,6 +132,8 @@ jobs:
           target: no_model
           tags: ${{ steps.setup.outputs.tags }}
           labels: ${{ steps.setup.outputs.labels }}
+          build-args: |
+            GIT_SHA=${{ github.sha }}
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -177,6 +181,7 @@ jobs:
           build-args: |
             WHISPER_MODEL=${{ matrix.model }}
             NO_MODEL_STAGE=ghcr.io/jim60105/whisperx:no_model@${{ needs.docker-no_model.outputs.digest }}
+            GIT_SHA=${{ github.sha }}
           platforms: linux/amd64, linux/arm64
 
   # Run the rest of the builds in parallel
@@ -257,6 +262,7 @@ jobs:
             LANG=${{ matrix.lang }}
             LOAD_WHISPER_STAGE=ghcr.io/jim60105/whisperx:cache-${{ matrix.model }}
             NO_MODEL_STAGE=ghcr.io/jim60105/whisperx:no_model@${{ needs.docker-no_model.outputs.digest }}
+            GIT_SHA=${{ github.sha }}
           platforms: linux/amd64, linux/arm64
 
   test-large-v3-zh:
