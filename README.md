@@ -121,15 +121,15 @@ Despite my initial hesitation, I made the decision not to utilize the _UBI_ vers
 
 Please refer to [the latest vulnerability scan report](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml?query=is%3Asuccess) from our scanning workflow artifact. You can see that the _UBI_ version has fewer vulnerabilities compared to the _Python official image_ version.
 
-You can get the pre-built image at tag [ubi-no_model](https://github.com/jim60105/docker-whisperX/pkgs/container/whisperx/156402794?tag=ubi-no_model). Notice that only `no_model` is available. Feel free to build your own image with the [ubi.Dockerfile](ubi.Dockerfile) for your needs. This Dockerfile supports the same build arguments as the default one.
+You can get the pre-built image at tag `ubi-no_model`. Notice that only `no_model` is available. Feel free to build your own image with the [ubi.Dockerfile](ubi.Dockerfile) for your needs. This Dockerfile supports the same build arguments as the default one.
 
 ```bash
 docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:ubi-no_model -- --model tiny --language en --output_format srt audio.mp3
 ```
 
 > [!WARNING]
-> DISCLAIMER:  
-> I have constructed the image in accordance with the specifications outlined in the [Red Hat Container Certification requirement](https://access.redhat.com/documentation/en-us/red_hat_software_certification/8.72/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction); however, I have not pursued the actual [certification](https://connect.redhat.com/en/partner-with-us/red-hat-container-certification) from Red Hat.
+> _**DISCLAIMER**_:  
+> I have created the image in accordance with the specifications outlined in the [Red Hat Container Certification Requirement](https://access.redhat.com/documentation/en-us/red_hat_software_certification/8.72/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction) but I am not going to pursue the actual [certification](https://connect.redhat.com/en/partner-with-us/red-hat-container-certification).
 
 ## LICENSE
 
