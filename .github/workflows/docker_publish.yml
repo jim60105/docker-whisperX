@@ -248,6 +248,12 @@ jobs:
           token: ${{ secrets.CR_PAT }}
           tag: ${{ matrix.model }}-${{ matrix.lang }}
 
+      - name: Get short SHA
+        id: get-sha
+        run: |
+          id=$(echo ${{ github.sha }} | cut -c 1-7)
+          echo "id=$id" >> $GITHUB_OUTPUT
+
       - name: Build and push:${{ matrix.model }}-${{ matrix.lang }}
         uses: docker/build-push-action@v4
         with:
@@ -260,7 +266,7 @@ jobs:
           build-args: |
             WHISPER_MODEL=${{ matrix.model }}
             LANG=${{ matrix.lang }}
-            LOAD_WHISPER_STAGE=ghcr.io/jim60105/whisperx:cache-${{ matrix.model }}
+            LOAD_WHISPER_STAGE=ghcr.io/jim60105/whisperx:cache-${{ matrix.model }}-${{ steps.get-sha.outputs.id }}
             NO_MODEL_STAGE=ghcr.io/jim60105/whisperx:no_model@${{ needs.docker-no_model.outputs.digest }}
             GIT_SHA=${{ github.sha }}
           platforms: linux/amd64, linux/arm64
@@ -293,9 +299,15 @@ jobs:
             .github/workflows/test/**
           sparse-checkout-cone-mode: false
 
+      - name: Get short SHA
+        id: get-sha
+        run: |
+          id=$(echo ${{ github.sha }} | cut -c 1-7)
+          echo "id=$id" >> $GITHUB_OUTPUT
+
       - name: Test large-v3-zh docker image
         run: |
-          docker run --group-add 0 -v ".:/app" ghcr.io/jim60105/whisperx:large-v3-zh -- --device cpu --compute_type int8 --output_format srt .github/workflows/test/zh.webm;
+          docker run --group-add 0 -v ".:/app" ghcr.io/jim60105/whisperx:large-v3-zh-${{ steps.get-sha.outputs.id }} -- --device cpu --compute_type int8 --output_format srt .github/workflows/test/zh.webm;
           if [ ! -f zh.srt ]; then
             echo "The zh.srt file does not exist"
             exit 1
