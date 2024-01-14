@@ -1,6 +1,6 @@
 # docker-whisperX
 
-[![CodeFactor](https://www.codefactor.io/repository/github/jim60105/docker-whisperx/badge?style=for-the-badge)](https://www.codefactor.io/repository/github/jim60105/docker-whisperx) [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/scan.yml?label=IMAGE%20SCAN&style=for-the-badge)](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml)
+[![CodeFactor](https://www.codefactor.io/repository/github/jim60105/docker-whisperx/badge?style=for-the-badge)](https://www.codefactor.io/repository/github/jim60105/docker-whisperx) ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=DOCKER%20BUILD&style=for-the-badge) [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/scan.yml?label=IMAGE%20SCAN&style=for-the-badge)](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml)
 
 This is the docker image for [WhisperX: Automatic Speech Recognition with Word-Level Timestamps (and Speaker Diarization)](https://github.com/m-bain/whisperX) from the community.
 
