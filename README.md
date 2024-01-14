@@ -64,8 +64,7 @@ docker run --gpus all -it -v ".:/app" -v whisper_cache:/.cache ghcr.io/jim60105/
 
 The [Dockerfile](Dockerfile) builds the image contained models. It accepts two build arguments: `LANG` and `WHISPER_MODEL`.
 
-- `LANG`: The language to transcribe. The default is `en`. See [here](https://github.com/jim60105/docker-whisperX/blob/master/load_align_model.py) for supported languages.  
-
+- `LANG`: The language to transcribe. The default is `en`. See [here](https://github.com/jim60105/docker-whisperX/blob/master/load_align_model.py) for supported languages.
 - `WHISPER_MODEL`: The model name. The default is `base`. See [fast-whisper](https://huggingface.co/Systran) for supported models.
 
 In case of multiple language alignments needed, use space separated list of languages `"LANG=pl fr en"` when building the image. Also note that WhisperX is not doing well to handle multiple languages within the same audio file. Even if you do not provide the language parameter, it will still recognize the language (or fallback to en) and use it for choosing the alignment model. Alignment models are language specific. **This instruction is simply for embedding multiple alignment models into a docker image.**
@@ -113,9 +112,10 @@ docker run --gpus all -it -v ".:/app" whisperx:large-v3-ja -- --output_format sr
 
 I have created an alternative [ubi.Dockerfile](ubi.Dockerfile) that is based on the **Red Hat Universal Base Image (UBI)** image, unlike the default one which used the **Python official image** as the base image. If you are a Red Hat subscriber, I believe you will find its benefits.
 
-> With the release of the Red Hat Universal Base Image (UBI), you can now take advantage of the greater reliability, security, and performance of official Red Hat container images where OCI-compliant Linux containers run - whether you're a customer or not. --[Red Hat blog](https://www.redhat.com/en/blog/introducing-red-hat-universal-base-image)
+> [!TIP]
+> With the release of the Red Hat Universal Base Image (UBI), you can now take advantage of the greater reliability, security, and performance of official Red Hat container images where OCI-compliant Linux containers run - whether you're a customer or not. -- [Red Hat blog](https://www.redhat.com/en/blog/introducing-red-hat-universal-base-image)
 
-It is important to mention that it is _NOT_ necessary obtaining a license from Red Hat to use UBI, however, if you are the subscriber and runs it on RHEL/OpenShift, you can get supports from Red Hat.
+It is important to mention that it is _NOT_ necessary obtaining a license from Red Hat to use UBI, however, if you are the subscriber and runs it on RHEL/OpenShift, you may get supports from Red Hat.
 
 Despite my initial hesitation, I made the decision not to utilize the _UBI_ version as the default image. The _Python official image_ has a significantly larger user base compared to _UBI_, and I believe that opting for it aligns better with public expectations. Nevertheless, I would still suggest giving the _UBI_ version a try.
 
@@ -127,9 +127,13 @@ You can get the pre-built image at tag [ubi-no_model](https://github.com/jim6010
 docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:ubi-no_model -- --model tiny --language en --output_format srt audio.mp3
 ```
 
+> [!WARNING]
+> DISCLAIMER:  
+> I have constructed the image in accordance with the specifications outlined in the [Red Hat Container Certification requirement](https://access.redhat.com/documentation/en-us/red_hat_software_certification/8.72/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction); however, I have not pursued the actual [certification](https://connect.redhat.com/en/partner-with-us/red-hat-container-certification) from Red Hat.
+
 ## LICENSE
 
 > The main program, WhisperX, is distributed under [the BSD-4 license](https://github.com/m-bain/whisperX/blob/main/LICENSE).  
-Please consult their repository for access to the source code and license.
+> Please consult their repository for access to the source code and license.
 
 The Dockerfile and CI workflow files in this repository are licensed under [the MIT license](LICENSE).

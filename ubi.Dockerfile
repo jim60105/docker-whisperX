@@ -2,6 +2,7 @@
 ARG WHISPER_MODEL=base
 ARG LANG=en
 ARG UID=1001
+ARG GIT_SHA
 
 # These ARGs are for caching stage builds in CI
 # Leave them as is when building locally
@@ -25,7 +26,23 @@ ENV PYTHON_VERSION=3.11
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONIOENCODING=UTF-8
 
-RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs -y install python3.11 && \
+ARG GIT_SHA
+LABEL name="jim60105/docker-whisperX" \
+    # Authors for WhisperX
+    vendor="Bain, Max and Huh, Jaesung and Han, Tengda and Zisserman, Andrew" \
+    # Maintainer for this docker image
+    maintainer="jim60105" \
+    # Dockerfile source repository
+    url="https://github.com/jim60105/docker-whisperX" \
+    version="ubi-no_model" \
+    # This should be a number, but we are using the git sha for convenience here.
+    release=${GIT_SHA} \
+    io.k8s.display-name="WhisperX" \
+    summary="WhisperX: Time-Accurate Speech Transcription of Long-Form Audio" \
+    description="This is the docker image for WhisperX: Automatic Speech Recognition with Word-Level Timestamps (and Speaker Diarization) from the community. For more information about this tool, please visit the following website: https://github.com/m-bain/whisperX."
+
+RUN microdnf -y upgrade --refresh --best --nodocs --noplugins --setopt=install_weak_deps=0 && \
+    microdnf -y install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs python3.11 && \
     microdnf -y clean all
 RUN ln -s /usr/bin/python3.11 /usr/bin/python3 && \
     ln -s /usr/bin/python3.11 /usr/bin/python
@@ -43,8 +60,8 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
 FROM base as build
 
 # Install build time requirements
-RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs -y install git python3.11-pip findutils && \
-    microdnf clean all
+RUN microdnf -y install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs git python3.11-pip findutils && \
+    microdnf -y clean all
 
 # RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
 ARG TARGETARCH
@@ -87,10 +104,14 @@ COPY --link --from=mwader/static-ffmpeg:6.1.1 /ffprobe /usr/local/bin/
 
 # Copy dist and support arbitrary user ids (OpenShift best practice)
 # https://docs.openshift.com/container-platform/4.14/openshift_images/create-images.html#use-uid_create-images
-COPY --chmod=774 \
+COPY --chmod=775 \
     --from=build /root/.local /root/.local
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONPATH="${PYTHONPATH}:/root/.local/lib/python3.11/site-packages" 
+
+RUN install -d -m 775 -o $UID -g 0 /licenses
+COPY --chmod=775 LICENSE /licenses/LICENSE
+COPY --chmod=775 whisperX/LICENSE /licenses/whisperX.LICENSE
 
 ARG CACHE_HOME
 ARG CONFIG_HOME
@@ -100,8 +121,8 @@ ENV XDG_CACHE_HOME=${CACHE_HOME}
 ENV TORCH_HOME=${TORCH_HOME}
 ENV HF_HOME=${HF_HOME}
 
-RUN install -d -m 774 -o $UID -g 0 ${CACHE_HOME} && \
-    install -d -m 774 -o $UID -g 0 ${CONFIG_HOME}
+RUN install -d -m 775 -o $UID -g 0 ${CACHE_HOME} && \
+    install -d -m 775 -o $UID -g 0 ${CONFIG_HOME}
 
 ARG WHISPER_MODEL
 ENV WHISPER_MODEL=
@@ -152,7 +173,7 @@ FROM ${NO_MODEL_STAGE} as final
 ARG UID
 
 ARG CACHE_HOME
-COPY --link --chown=$UID:0 --chmod=774 \
+COPY --link --chown=$UID:0 --chmod=775 \
     --from=load_align ${CACHE_HOME} ${CACHE_HOME}
 
 ARG WHISPER_MODEL
