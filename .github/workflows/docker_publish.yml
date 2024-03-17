@@ -33,7 +33,7 @@ jobs:
           tag: ubi-no_model
 
       - name: Build:ubi-no_model
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         id: build
         with:
           context: .
@@ -63,7 +63,7 @@ jobs:
           echo "Test passed."
 
       - name: Build and push:ubi-no_model
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./ubi.Dockerfile
@@ -97,7 +97,7 @@ jobs:
           token: ${{ secrets.CR_PAT }}
 
       - name: Build:no_model
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         id: build
         with:
           context: .
@@ -127,7 +127,7 @@ jobs:
           echo "Test passed."
 
       - name: Build and push:no_model
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         id: publish
         with:
           context: .
@@ -173,7 +173,7 @@ jobs:
           tag: cache-${{ matrix.model }}
 
       - name: Build cache:${{ matrix.model }}
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         id: build
         with:
           context: .
@@ -261,7 +261,7 @@ jobs:
           echo "id=$id" >> $GITHUB_OUTPUT
 
       - name: Build and push:${{ matrix.model }}-${{ matrix.lang }}
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
