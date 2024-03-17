@@ -42,7 +42,8 @@ jobs:
           target: no_model
           labels: ${{ steps.setup.outputs.labels }}
           build-args: |
-            GIT_SHA=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+            RELEASE=${{ github.run_number }}
           platforms: linux/amd64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
@@ -72,7 +73,8 @@ jobs:
           tags: ${{ steps.setup.outputs.tags }}
           labels: ${{ steps.setup.outputs.labels }}
           build-args: |
-            GIT_SHA=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+            RELEASE=${{ github.run_number }}
           platforms: linux/amd64, linux/arm64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
@@ -106,7 +108,8 @@ jobs:
           target: no_model
           labels: ${{ steps.setup.outputs.labels }}
           build-args: |
-            GIT_SHA=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+            RELEASE=${{ github.run_number }}
           platforms: linux/amd64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
@@ -137,7 +140,8 @@ jobs:
           tags: ${{ steps.setup.outputs.tags }}
           labels: ${{ steps.setup.outputs.labels }}
           build-args: |
-            GIT_SHA=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+            RELEASE=${{ github.run_number }}
           platforms: linux/amd64, linux/arm64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
@@ -185,7 +189,8 @@ jobs:
           build-args: |
             WHISPER_MODEL=${{ matrix.model }}
             NO_MODEL_STAGE=ghcr.io/jim60105/whisperx:no_model@${{ needs.docker-no_model.outputs.digest }}
-            GIT_SHA=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+            RELEASE=${{ github.run_number }}
           platforms: linux/amd64, linux/arm64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
@@ -274,7 +279,8 @@ jobs:
             LANG=${{ matrix.lang }}
             LOAD_WHISPER_STAGE=ghcr.io/jim60105/whisperx:cache-${{ matrix.model }}-${{ steps.get-sha.outputs.id }}
             NO_MODEL_STAGE=ghcr.io/jim60105/whisperx:no_model@${{ needs.docker-no_model.outputs.digest }}
-            GIT_SHA=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
+            RELEASE=${{ github.run_number }}
           platforms: linux/amd64, linux/arm64
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
