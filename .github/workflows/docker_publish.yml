@@ -44,8 +44,8 @@ jobs:
           build-args: |
             GIT_SHA=${{ github.sha }}
           platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
 
       - name: Test ubi-no_model docker image
         run: |
@@ -74,8 +74,8 @@ jobs:
           build-args: |
             GIT_SHA=${{ github.sha }}
           platforms: linux/amd64, linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
 
   # Run the no_model build first ensure that the code at least builds
   docker-no_model:
@@ -108,8 +108,8 @@ jobs:
           build-args: |
             GIT_SHA=${{ github.sha }}
           platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
 
       - name: Test no_model docker image
         run: |
@@ -139,8 +139,8 @@ jobs:
           build-args: |
             GIT_SHA=${{ github.sha }}
           platforms: linux/amd64, linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
 
   # Download whisper model cache
   docker-cache:
@@ -187,6 +187,8 @@ jobs:
             NO_MODEL_STAGE=ghcr.io/jim60105/whisperx:no_model@${{ needs.docker-no_model.outputs.digest }}
             GIT_SHA=${{ github.sha }}
           platforms: linux/amd64, linux/arm64
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
 
   # Run the rest of the builds in parallel
   docker:
@@ -274,6 +276,8 @@ jobs:
             NO_MODEL_STAGE=ghcr.io/jim60105/whisperx:no_model@${{ needs.docker-no_model.outputs.digest }}
             GIT_SHA=${{ github.sha }}
           platforms: linux/amd64, linux/arm64
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
 
   test-large-v3-zh:
     name: Test large-v3-zh docker image
