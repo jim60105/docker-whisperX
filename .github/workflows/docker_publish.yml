@@ -232,7 +232,9 @@ jobs:
           - hi
           - ca
           - ml
-          - no
+          # Disable language 'no' because this transcribe model is too large to build on the GitHub Actions
+          # https://github.com/jim60105/docker-whisperX/actions/runs/8405597972
+          # - no
           - nn
         model:
           - tiny
