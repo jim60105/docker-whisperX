@@ -18,9 +18,9 @@ ARG CONFIG_HOME=/.config
 ARG TORCH_HOME=${CACHE_HOME}/torch
 ARG HF_HOME=${CACHE_HOME}/huggingface
 
-######
+########################################
 # Base stage
-######
+########################################
 FROM registry.access.redhat.com/ubi9/ubi-minimal as base
 
 ENV PYTHON_VERSION=3.11
@@ -40,9 +40,9 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
     microdnf -y install libgomp libsndfile && microdnf clean all; \
     fi
 
-######
+########################################
 # Build stage
-######
+########################################
 FROM base as build
 
 # Install build time requirements
@@ -56,17 +56,18 @@ ARG TARGETVARIANT
 WORKDIR /app
 
 # Install under /root/.local
-ENV PIP_USER="true"
+ARG PIP_USER="true"
 ARG PIP_NO_WARN_SCRIPT_LOCATION=0
 ARG PIP_ROOT_USER_ACTION="ignore"
+ARG PIP_NO_COMPILE="true"
+ARG PIP_DISABLE_PIP_VERSION_CHECK="true"
 
 # Install requirements
 RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/pip \
-    pip3.11 install --extra-index-url https://download.pytorch.org/whl/cu118 \
+    pip3.11 install -U --force-reinstall pip setuptools wheel && \
+    pip3.11 install -U --extra-index-url https://download.pytorch.org/whl/cu118 \
     torch==2.1.1 torchaudio==2.1.1 \
-    pyannote.audio==3.1.1 \
-    # Use dumb-init as PID 1 to handle signals properly
-    pip dumb-init
+    pyannote.audio==3.1.1
 
 RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/pip \
     --mount=source=whisperX/requirements.txt,target=requirements.txt \
@@ -80,17 +81,13 @@ RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/r
     find "/root/.local" -name '*.pyc' -print0 | xargs -0 rm -f || true ; \
     find "/root/.local" -type d -name '__pycache__' -print0 | xargs -0 rm -rf || true ;
 
-######
+########################################
 # Final stage for no_model
-######
+########################################
 FROM base as no_model
 
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-
-# ffmpeg
-COPY --link --from=mwader/static-ffmpeg:6.1.1 /ffmpeg /usr/local/bin/
-COPY --link --from=mwader/static-ffmpeg:6.1.1 /ffprobe /usr/local/bin/
 
 ARG CACHE_HOME
 ARG CONFIG_HOME
@@ -105,16 +102,23 @@ RUN install -d -m 775 -o $UID -g 0 /licenses && \
     install -d -m 775 -o $UID -g 0 ${CACHE_HOME} && \
     install -d -m 775 -o $UID -g 0 ${CONFIG_HOME}
 
+# ffmpeg
+COPY --link --from=ghcr.io/jim60105/static-ffmpeg-upx:7.0-1 /ffmpeg /usr/local/bin/
+# COPY --link --from=ghcr.io/jim60105/static-ffmpeg-upx:7.0-1 /ffprobe /usr/local/bin/
+
+# dumb-init
+COPY --link --from=ghcr.io/jim60105/static-ffmpeg-upx:7.0-1 /dumb-init /usr/local/bin/
+
 # Copy licenses (OpenShift Policy)
-COPY --link --chmod=775 LICENSE /licenses/LICENSE
-COPY --link --chmod=775 whisperX/LICENSE /licenses/whisperX.LICENSE
+COPY --link --chown=$UID:0 --chmod=775 LICENSE /licenses/LICENSE
+COPY --link --chown=$UID:0 --chmod=775 whisperX/LICENSE /licenses/whisperX.LICENSE
 
 # Copy dependencies and code (and support arbitrary uid for OpenShift best practice)
 # https://docs.openshift.com/container-platform/4.14/openshift_images/create-images.html#use-uid_create-images
 COPY --link --chown=$UID:0 --chmod=775 --from=build /root/.local /root/.local
 
 ENV PATH="/root/.local/bin:$PATH"
-ENV PYTHONPATH="${PYTHONPATH}:/root/.local/lib/python3.11/site-packages" 
+ENV PYTHONPATH="/root/.local/lib/python3.11/site-packages:$PYTHONPATH"
 
 ARG WHISPER_MODEL
 ENV WHISPER_MODEL=
@@ -147,9 +151,10 @@ LABEL name="jim60105/docker-whisperX" \
     summary="WhisperX: Time-Accurate Speech Transcription of Long-Form Audio" \
     description="This is the docker image for WhisperX: Automatic Speech Recognition with Word-Level Timestamps (and Speaker Diarization) from the community. For more information about this tool, please visit the following website: https://github.com/m-bain/whisperX."
 
-######
-# load_whisper stage: This stage will be tagged for caching in CI.
-######
+########################################
+# load_whisper stage
+# This stage will be tagged for caching in CI.
+########################################
 FROM ${NO_MODEL_STAGE} as load_whisper
 
 ARG TORCH_HOME
@@ -162,9 +167,9 @@ RUN python3 -c 'from whisperx.vad import load_vad_model; load_vad_model("cpu");'
 ARG WHISPER_MODEL
 RUN python3 -c 'import faster_whisper; model = faster_whisper.WhisperModel("'${WHISPER_MODEL}'")'
 
-######
+########################################
 # load_align stage
-######
+########################################
 FROM ${LOAD_WHISPER_STAGE} as load_align
 
 ARG TORCH_HOME
@@ -176,16 +181,15 @@ ARG LANG
 RUN --mount=source=load_align_model.py,target=load_align_model.py \
     for i in ${LANG}; do echo "Aliging lang $i"; python3 load_align_model.py "$i"; done
 
-######
+########################################
 # Final stage with model
-######
+########################################
 FROM ${NO_MODEL_STAGE} as final
 
 ARG UID
 
 ARG CACHE_HOME
-COPY --link --chown=$UID:0 --chmod=775 \
-    --from=load_align ${CACHE_HOME} ${CACHE_HOME}
+COPY --link --chown=$UID:0 --chmod=775 --from=load_align ${CACHE_HOME} ${CACHE_HOME}
 
 ARG WHISPER_MODEL
 ENV WHISPER_MODEL=${WHISPER_MODEL}
