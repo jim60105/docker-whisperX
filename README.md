@@ -1,6 +1,6 @@
 # docker-whisperX
 
-[![CodeFactor](https://www.codefactor.io/repository/github/jim60105/docker-whisperx/badge)](https://www.codefactor.io/repository/github/jim60105/docker-whisperx) ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=DOCKER%20BUILD) [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/scan.yml?label=IMAGE%20SCAN)](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml)
+[![CodeFactor](https://www.codefactor.io/repository/github/jim60105/docker-whisperx/badge)](https://www.codefactor.io/repository/github/jim60105/docker-whisperx) ![Docker Build](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=Docker%20Build) [![Image Scan](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/scan.yml?label=Image%20Scan)](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml) [![Image Scan UBI](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/scan_ubi.yml?label=Image%20Scan%20UBI)](https://github.com/jim60105/docker-whisperX/actions/workflows/scan_ubi.yml)
 
 This is the docker image for [WhisperX: Automatic Speech Recognition with Word-Level Timestamps (and Speaker Diarization)](https://github.com/m-bain/whisperX) from the community.
 
@@ -113,6 +113,8 @@ docker run --gpus all -it -v ".:/app" whisperx:large-v3-ja -- --output_format sr
 > `--model` and `--language` args are defined in Dockerfile, no need to specify.
 
 ## ⛑️ Red Hat UBI based Image
+
+[![Image Scan UBI](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/scan_ubi.yml?label=Image%20Scan%20UBI)](https://github.com/jim60105/docker-whisperX/actions/workflows/scan_ubi.yml)
 
 I have created an alternative [ubi.Dockerfile](ubi.Dockerfile) that is based on the **Red Hat Universal Base Image (UBI)** image, unlike the default one which used the **Python official image** as the base image. If you are a Red Hat subscriber, I believe you will find its benefits.
 

@@ -1,0 +1,60 @@
+name: scan
+
+on:
+  workflow_run:
+    workflows: [docker_publish]
+    types: [completed]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  scan-ubi:
+    name: Scan Red Hat UBI base image
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows/scan/html.tpl
+          sparse-checkout-cone-mode: false
+
+      - name: Run Trivy vulnerability scanner for UBI image
+        uses: aquasecurity/trivy-action@0.16.1
+        with:
+          image-ref: "ghcr.io/jim60105/whisperx:ubi-no_model"
+          vuln-type: "os,library"
+          scanners: vuln
+          severity: "CRITICAL,HIGH"
+          format: "template"
+          template: "@.github/workflows/scan/html.tpl"
+          ignore-unfixed: true
+          output: "trivy-results-ubi.html"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-results-ubi
+          path: trivy-results-ubi.html
+          retention-days: 90
+
+      - name: Run Trivy vulnerability scanner for UBI image (SARIF)
+        uses: aquasecurity/trivy-action@master
+        if: always()
+        with:
+          image-ref: "ghcr.io/jim60105/whisperx:ubi-no_model"
+          vuln-type: "os,library"
+          scanners: vuln
+          severity: "CRITICAL,HIGH"
+          format: 'sarif'
+          exit-code: '1'
+          ignore-unfixed: true
+          output: 'trivy-results.sarif'
+  
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
