@@ -1,11 +1,8 @@
-name: Setup docker
+name: Reusable docker workflow
 
-description: Configure the docker workflow.
+description: Reusable docker workflow.
 
 inputs:
-  token:
-    description: "A GitHub PAT"
-    required: true
   tag:
     description: "A tag to use for the image"
     default: "no_model"
@@ -21,15 +18,11 @@ outputs:
 runs:
   using: composite
   steps:
+    # We require additional space due to the large size of our image. (~10GB)
     - name: Free Disk Space (Ubuntu)
       uses: jlumbroso/free-disk-space@main
       with:
-        # this might remove tools that are actually needed,
-        # if set to "true" but frees about 6 GB
         tool-cache: true
-
-        # all of these default to true, but feel free to set to
-        # "false" if necessary for your workflow
         android: true
         dotnet: true
         haskell: true
@@ -37,7 +30,7 @@ runs:
         docker-images: true
         swap-storage: true
 
-    - name: Docker meta data:${{ inputs.tag }}
+    - name: Docker meta:${{ inputs.tag }}
       id: meta
       uses: docker/metadata-action@v5
       with:
@@ -47,14 +40,16 @@ runs:
           type=sha,prefix=${{ inputs.tag }}-
           type=raw,value=latest,enable=${{ inputs.tag == 'no_model' }}
 
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+    
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    # Create a Access Token with `read:packages` and `write:packages` scopes
-    # CR_PAT
+    # You may need to manage write and read access of GitHub Actions for repositories in the container settings.
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.repository_owner }}
-        password: ${{ inputs.token }}
+        password: ${{ github.token }}
