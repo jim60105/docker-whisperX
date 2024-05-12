@@ -1,12 +1,16 @@
 # docker-whisperX
 
-[![CodeFactor](https://www.codefactor.io/repository/github/jim60105/docker-whisperx/badge?style=for-the-badge)](https://www.codefactor.io/repository/github/jim60105/docker-whisperx) ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=DOCKER%20BUILD&style=for-the-badge) [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/scan.yml?label=IMAGE%20SCAN&style=for-the-badge)](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml)
+[![CodeFactor](https://www.codefactor.io/repository/github/jim60105/docker-whisperx/badge)](https://www.codefactor.io/repository/github/jim60105/docker-whisperx) ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=DOCKER%20BUILD) [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/scan.yml?label=IMAGE%20SCAN)](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml)
 
 This is the docker image for [WhisperX: Automatic Speech Recognition with Word-Level Timestamps (and Speaker Diarization)](https://github.com/m-bain/whisperX) from the community.
 
+The objective of this project is to efficiently manage the continuous integration docker build workflow on the ***GitHub Free runner*** on a ***weekly basis***. Which includes building ***175*** Docker images ***in parallel***, each with a size of ***10GB.*** To ensure smooth operation, I have concentrated on utilizing docker layer caches efficiently, maximizing layer reuse, carefully managing cache read/write order to prevent any issues, and optimizing to minimize image size and build time.
+
+Additionally, for my personal preference, I am dedicated to following best practices, industry standards and policies to the best of my ability.
+
 Get the Dockerfile at [GitHub](https://github.com/jim60105/docker-whisperX), or pull the image from [ghcr.io](https://ghcr.io/jim60105/whisperx).
 
-## Get your Docker ready for GPU support
+## 🚀 Get your Docker ready for GPU support
 
 ### Windows
 
@@ -24,7 +28,7 @@ Install an NVIDIA GPU Driver if you do not already have one installed.
 Install the NVIDIA Container Toolkit with this guide.  
 <https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html>
 
-## Available Pre-built Image
+## 📦 Available Pre-built Image
 
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=DOCKER%20BUILD&style=for-the-badge) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/jim60105/docker-whisperX/master?label=DATE&style=for-the-badge)
 
@@ -45,7 +49,7 @@ You can find all available tags at [ghcr.io](https://github.com/jim60105/docker-
 
 In addition, there is also a `no_model` tag that does not include any pre-downloaded models, also referred to as `latest`.
 
-## Preserve the download cache for the align models when working with various languages
+## ⚡️ Preserve the download cache for the align models when working with various languages
 
 You can mount the `/.cache` to share align models between containers.  
 Please use tag `no_model` (`latest`) for this scenario.
@@ -54,7 +58,7 @@ Please use tag `no_model` (`latest`) for this scenario.
 docker run --gpus all -it -v ".:/app" -v whisper_cache:/.cache ghcr.io/jim60105/whisperx:latest -- --model large-v3 --language en --output_format srt audio.mp3
 ```
 
-## Building the Docker Image
+## 🛠️ Building the Docker Image
 
 > [!IMPORTANT]  
 > Clone the Git repository recursively to include submodules:  
@@ -108,18 +112,18 @@ docker run --gpus all -it -v ".:/app" whisperx:large-v3-ja -- --output_format sr
 > Remember to prepend `--` before the arguments.  
 > `--model` and `--language` args are defined in Dockerfile, no need to specify.
 
-## Red Hat UBI based Image
+## ⛑️ Red Hat UBI based Image
 
 I have created an alternative [ubi.Dockerfile](ubi.Dockerfile) that is based on the **Red Hat Universal Base Image (UBI)** image, unlike the default one which used the **Python official image** as the base image. If you are a Red Hat subscriber, I believe you will find its benefits.
 
 > [!TIP]
 > With the release of the Red Hat Universal Base Image (UBI), you can now take advantage of the greater reliability, security, and performance of official Red Hat container images where OCI-compliant Linux containers run - whether you're a customer or not. -- [Red Hat blog](https://www.redhat.com/en/blog/introducing-red-hat-universal-base-image)
 
-It is important to mention that it is _NOT_ necessary obtaining a license from Red Hat to use UBI, however, if you are the subscriber and runs it on RHEL/OpenShift, you may get supports from Red Hat.
+It is important to mention that it is *NOT* necessary obtaining a license from Red Hat to use UBI, however, if you are the subscriber and runs it on RHEL/OpenShift, you may get supports from Red Hat.
 
-Despite my initial hesitation, I made the decision not to utilize the _UBI_ version as the default image. The _Python official image_ has a significantly larger user base compared to _UBI_, and I believe that opting for it aligns better with public expectations. Nevertheless, I would still suggest giving the _UBI_ version a try.
+Despite my initial hesitation, I made the decision not to utilize the *UBI* version as the default image. The *Python official image* has a significantly larger user base compared to *UBI*, and I believe that opting for it aligns better with public expectations. Nevertheless, I would still suggest giving the *UBI* version a try.
 
-Please refer to [the latest vulnerability scan report](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml?query=is%3Asuccess) from our scanning workflow artifact. You can see that the _UBI_ version has fewer vulnerabilities compared to the _Python official image_ version.
+Please refer to [the latest vulnerability scan report](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml?query=is%3Asuccess) from our scanning workflow artifact. You can see that the *UBI* version has fewer vulnerabilities compared to the *Python official image* version.
 
 You can get the pre-built image at tag `ubi-no_model`. Notice that only `no_model` is available. Feel free to build your own image with the [ubi.Dockerfile](ubi.Dockerfile) for your needs. This Dockerfile supports the same build arguments as the default one.
 
@@ -128,10 +132,10 @@ docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:ubi-no_model -- 
 ```
 
 > [!WARNING]
-> _**DISCLAIMER**_:  
+> ***DISCLAIMER***:  
 > I have created the image in accordance with the specifications outlined in the [Red Hat Container Certification Requirement](https://access.redhat.com/documentation/en-us/red_hat_software_certification/8.72/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction) but I am not going to pursue the actual [certification](https://connect.redhat.com/en/partner-with-us/red-hat-container-certification).
 
-## LICENSE
+## 📝 LICENSE
 
 > The main program, WhisperX, is distributed under [the BSD-4 license](https://github.com/m-bain/whisperX/blob/main/LICENSE).  
 > Please consult their repository for access to the source code and license.
