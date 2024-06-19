@@ -67,7 +67,9 @@ RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/r
     pip3.11 install -U --force-reinstall pip setuptools wheel && \
     pip3.11 install -U --extra-index-url https://download.pytorch.org/whl/cu118 \
     torch==2.1.1 torchaudio==2.1.1 \
-    pyannote.audio==3.1.1
+    pyannote.audio==3.1.1 \
+    # https://github.com/jim60105/docker-whisperX/issues/40
+    "numpy<2.0"
 
 RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/pip \
     --mount=source=whisperX/requirements.txt,target=requirements.txt \
