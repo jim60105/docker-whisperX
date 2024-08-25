@@ -81,8 +81,8 @@ RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/r
 ########################################
 FROM base AS no_model
 
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
 # We don't need them anymore
 RUN pip3.11 uninstall -y pip wheel && \
@@ -121,7 +121,7 @@ COPY --link --chown=$UID:0 --chmod=775 whisperX/LICENSE /licenses/whisperX.LICEN
 COPY --link --chown=$UID:0 --chmod=775 --from=build /root/.local /home/$UID/.local
 
 ENV PATH="/home/$UID/.local/bin:$PATH"
-ENV PYTHONPATH="/home/$UID/.local/lib/python3.11/site-packages:$PYTHONPATH"
+ENV PYTHONPATH="/home/$UID/.local/lib/python3.11/site-packages"
 
 ARG WHISPER_MODEL
 ENV WHISPER_MODEL=

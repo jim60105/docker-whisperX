@@ -88,8 +88,8 @@ RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/r
 ########################################
 FROM base AS no_model
 
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
 ARG CACHE_HOME
 ARG CONFIG_HOME
@@ -120,7 +120,7 @@ COPY --link --chown=$UID:0 --chmod=775 whisperX/LICENSE /licenses/whisperX.LICEN
 COPY --link --chown=$UID:0 --chmod=775 --from=build /root/.local /root/.local
 
 ENV PATH="/root/.local/bin:$PATH"
-ENV PYTHONPATH="/root/.local/lib/python3.11/site-packages:$PYTHONPATH"
+ENV PYTHONPATH="/root/.local/lib/python3.11/site-packages"
 
 ARG WHISPER_MODEL
 ENV WHISPER_MODEL=
