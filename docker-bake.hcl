@@ -51,6 +51,9 @@ target "build" {
       "ml",
       "no",
       "nn",
+      "sk",
+      "sl",
+      "hr"
     ]
   }
 

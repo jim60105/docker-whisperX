@@ -243,6 +243,9 @@ jobs:
           # https://github.com/jim60105/docker-whisperX/actions/runs/8405597972
           # - no
           - nn
+          - sk
+          - sl
+          - hr
         model:
           - tiny
           - base
