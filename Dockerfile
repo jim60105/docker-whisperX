@@ -58,7 +58,7 @@ ARG PIP_DISABLE_PIP_VERSION_CHECK="true"
 # Install requirements
 RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/pip \
     pip install -U --force-reinstall pip setuptools wheel && \
-    pip install -U --extra-index-url https://download.pytorch.org/whl/cu118 \
+    pip install -U --extra-index-url https://download.pytorch.org/whl/cu121 \
     torch==2.2.2 torchaudio==2.2.2 \
     pyannote.audio==3.1.1 \
     # https://github.com/jim60105/docker-whisperX/issues/40
