@@ -21,7 +21,7 @@ ARG HF_HOME=${CACHE_HOME}/huggingface
 ########################################
 # Base stage
 ########################################
-FROM registry.access.redhat.com/ubi9/ubi-minimal as base
+FROM registry.access.redhat.com/ubi9/ubi-minimal AS base
 
 ENV PYTHON_VERSION=3.11
 ENV PYTHONUNBUFFERED=1
@@ -43,7 +43,7 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
 ########################################
 # Build stage
 ########################################
-FROM base as build
+FROM base AS build
 
 # Install build time requirements
 RUN microdnf -y install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs git python3.11-pip findutils && \
@@ -86,7 +86,7 @@ RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/r
 ########################################
 # Final stage for no_model
 ########################################
-FROM base as no_model
+FROM base AS no_model
 
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
@@ -157,7 +157,7 @@ LABEL name="jim60105/docker-whisperX" \
 # load_whisper stage
 # This stage will be tagged for caching in CI.
 ########################################
-FROM ${NO_MODEL_STAGE} as load_whisper
+FROM ${NO_MODEL_STAGE} AS load_whisper
 
 ARG TORCH_HOME
 ARG HF_HOME
@@ -172,7 +172,7 @@ RUN python3 -c 'import faster_whisper; model = faster_whisper.WhisperModel("'${W
 ########################################
 # load_align stage
 ########################################
-FROM ${LOAD_WHISPER_STAGE} as load_align
+FROM ${LOAD_WHISPER_STAGE} AS load_align
 
 ARG TORCH_HOME
 ARG HF_HOME
@@ -186,7 +186,7 @@ RUN --mount=source=load_align_model.py,target=load_align_model.py \
 ########################################
 # Final stage with model
 ########################################
-FROM ${NO_MODEL_STAGE} as final
+FROM ${NO_MODEL_STAGE} AS final
 
 ARG UID
 

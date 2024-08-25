@@ -21,7 +21,7 @@ ARG HF_HOME=${CACHE_HOME}/huggingface
 ########################################
 # Base stage
 ########################################
-FROM python:3.11-slim as base
+FROM python:3.11-slim AS base
 
 # RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
 ARG TARGETARCH
@@ -40,7 +40,7 @@ RUN --mount=type=cache,id=apt-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/v
 ########################################
 # Build stage
 ########################################
-FROM base as build
+FROM base AS build
 
 # RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
 ARG TARGETARCH
@@ -79,7 +79,7 @@ RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/r
 ########################################
 # Final stage for no_model
 ########################################
-FROM base as no_model
+FROM base AS no_model
 
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
@@ -158,7 +158,7 @@ LABEL name="jim60105/docker-whisperX" \
 # load_whisper stage
 # This stage will be tagged for caching in CI.
 ########################################
-FROM ${NO_MODEL_STAGE} as load_whisper
+FROM ${NO_MODEL_STAGE} AS load_whisper
 
 ARG TORCH_HOME
 ARG HF_HOME
@@ -173,7 +173,7 @@ RUN python3 -c 'import faster_whisper; model = faster_whisper.WhisperModel("'${W
 ########################################
 # load_align stage
 ########################################
-FROM ${LOAD_WHISPER_STAGE} as load_align
+FROM ${LOAD_WHISPER_STAGE} AS load_align
 
 ARG TORCH_HOME
 ARG HF_HOME
@@ -187,7 +187,7 @@ RUN --mount=source=load_align_model.py,target=load_align_model.py \
 ########################################
 # Final stage with model
 ########################################
-FROM ${NO_MODEL_STAGE} as final
+FROM ${NO_MODEL_STAGE} AS final
 
 ARG UID
 
