@@ -182,7 +182,7 @@ ARG HF_HOME
 ARG LANG
 
 RUN --mount=source=load_align_model.py,target=load_align_model.py \
-    for i in ${LANG}; do echo "Aliging lang $i"; python3 load_align_model.py "$i"; done
+    for i in ${LANG}; do echo "Align lang $i"; python3 load_align_model.py "$i"; done
 
 ########################################
 # Final stage with model
