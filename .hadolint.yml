@@ -6,3 +6,4 @@ ignored:
   - SC2015 # Note that A && B || C is not if-then-else. C may run when A is true.
   - DL3006 # Always tag the version of an image explicitly
   - DL3008 # Pin versions in apt get install. Instead of `apt-get install <package>` use `apt-get install <package>=<version>`
+  - DL3040 # `dnf clean all` missing after dnf command.

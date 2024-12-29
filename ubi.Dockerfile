@@ -27,17 +27,20 @@ ENV PYTHON_VERSION=3.11
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONIOENCODING=UTF-8
 
-RUN microdnf -y upgrade --refresh --best --nodocs --noplugins --setopt=install_weak_deps=0 && \
-    microdnf -y install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs python3.11 && \
-    microdnf -y clean all
+RUN --mount=type=cache,id=dnf-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/dnf \
+    microdnf -y upgrade --refresh --best --nodocs --noplugins --setopt=install_weak_deps=0 && \
+    microdnf -y install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
+    python3.11
 RUN ln -s /usr/bin/python3.11 /usr/bin/python3 && \
     ln -s /usr/bin/python3.11 /usr/bin/python
 
 # Missing dependencies for arm64
 # https://github.com/jim60105/docker-whisperX/issues/14
 ARG TARGETPLATFORM
-RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-    microdnf -y install libgomp libsndfile && microdnf clean all; \
+RUN --mount=type=cache,id=dnf-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/dnf \
+    if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
+    microdnf -y install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
+    libgomp libsndfile; \
     fi
 
 ########################################
@@ -46,8 +49,9 @@ RUN if [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
 FROM base AS build
 
 # Install build time requirements
-RUN microdnf -y install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs git python3.11-pip findutils && \
-    microdnf -y clean all
+RUN --mount=type=cache,id=dnf-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/dnf \
+    microdnf -y install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
+    git python3.11-pip findutils
 
 # RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
 ARG TARGETARCH
