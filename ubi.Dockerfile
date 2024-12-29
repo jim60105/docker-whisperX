@@ -60,6 +60,7 @@ ARG PIP_USER="true"
 ARG PIP_NO_WARN_SCRIPT_LOCATION=0
 ARG PIP_ROOT_USER_ACTION="ignore"
 ARG PIP_NO_COMPILE="true"
+ARG PIP_NO_BINARY="all"
 ARG PIP_DISABLE_PIP_VERSION_CHECK="true"
 
 # Install requirements
@@ -78,10 +79,13 @@ RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/r
 # Install whisperX
 RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/pip \
     --mount=source=whisperX,target=.,rw \
+    --mount=type=tmpfs,target=/tmp \
     pip3.11 install . && \
-    # Cleanup
-    find "/root/.local" -name '*.pyc' -print0 | xargs -0 rm -f || true ; \
-    find "/root/.local" -type d -name '__pycache__' -print0 | xargs -0 rm -rf || true ;
+    # Cleanup (Needed for Podman as it DOES write back to the build context)
+    rm -rf build
+
+# Test whisperX
+RUN python3 -c 'import whisperx;'
 
 ########################################
 # Final stage for no_model
@@ -101,31 +105,27 @@ ENV HF_HOME=${HF_HOME}
 
 ARG UID
 RUN install -d -m 775 -o $UID -g 0 /licenses && \
+    install -d -m 775 -o $UID -g 0 /root && \
     install -d -m 775 -o $UID -g 0 ${CACHE_HOME} && \
     install -d -m 775 -o $UID -g 0 ${CONFIG_HOME}
 
 # ffmpeg
-COPY --link --from=ghcr.io/jim60105/static-ffmpeg-upx:7.0-1 /ffmpeg /usr/local/bin/
-# COPY --link --from=ghcr.io/jim60105/static-ffmpeg-upx:7.0-1 /ffprobe /usr/local/bin/
+COPY --from=ghcr.io/jim60105/static-ffmpeg-upx:7.0-1 /ffmpeg /usr/local/bin/
+# COPY --from=ghcr.io/jim60105/static-ffmpeg-upx:7.0-1 /ffprobe /usr/local/bin/
 
 # dumb-init
-COPY --link --from=ghcr.io/jim60105/static-ffmpeg-upx:7.0-1 /dumb-init /usr/local/bin/
+COPY --from=ghcr.io/jim60105/static-ffmpeg-upx:7.0-1 /dumb-init /usr/local/bin/
 
 # Copy licenses (OpenShift Policy)
-COPY --link --chown=$UID:0 --chmod=775 LICENSE /licenses/LICENSE
-COPY --link --chown=$UID:0 --chmod=775 whisperX/LICENSE /licenses/whisperX.LICENSE
+COPY --chown=$UID:0 --chmod=775 LICENSE /licenses/LICENSE
+COPY --chown=$UID:0 --chmod=775 whisperX/LICENSE /licenses/whisperX.LICENSE
 
 # Copy dependencies and code (and support arbitrary uid for OpenShift best practice)
 # https://docs.openshift.com/container-platform/4.14/openshift_images/create-images.html#use-uid_create-images
-COPY --link --chown=$UID:0 --chmod=775 --from=build /root/.local /root/.local
+COPY --chown=$UID:0 --chmod=775 --from=build /root/.local /root/.local
 
 ENV PATH="/root/.local/bin:$PATH"
 ENV PYTHONPATH="/root/.local/lib/python3.11/site-packages"
-
-ARG WHISPER_MODEL
-ENV WHISPER_MODEL=
-ARG LANG
-ENV LANG=
 
 WORKDIR /app
 
@@ -159,29 +159,31 @@ LABEL name="jim60105/docker-whisperX" \
 ########################################
 FROM ${NO_MODEL_STAGE} AS load_whisper
 
-ARG TORCH_HOME
-ARG HF_HOME
+ARG CONFIG_HOME
+ARG XDG_CONFIG_HOME=${CONFIG_HOME}
+ARG HOME="/root"
 
 # Preload vad model
 RUN python3 -c 'from whisperx.vad import load_vad_model; load_vad_model("cpu");'
 
-# Preload fast-whisper
 ARG WHISPER_MODEL
-RUN python3 -c 'import faster_whisper; model = faster_whisper.WhisperModel("'${WHISPER_MODEL}'")'
+ENV WHISPER_MODEL=${WHISPER_MODEL}
+
+# Preload fast-whisper
+RUN echo "Preload whisper model: ${WHISPER_MODEL}" && \
+    python3 -c "import faster_whisper; model = faster_whisper.WhisperModel('${WHISPER_MODEL}')"
 
 ########################################
 # load_align stage
 ########################################
 FROM ${LOAD_WHISPER_STAGE} AS load_align
 
-ARG TORCH_HOME
-ARG HF_HOME
+ARG LANG
+ENV LANG=${LANG}
 
 # Preload align models
-ARG LANG
-
 RUN --mount=source=load_align_model.py,target=load_align_model.py \
-    for i in ${LANG}; do echo "Align lang $i"; python3 load_align_model.py "$i"; done
+    for i in ${LANG}; do echo "Preload align model: $i"; python3 load_align_model.py "$i"; done
 
 ########################################
 # Final stage with model
@@ -191,12 +193,12 @@ FROM ${NO_MODEL_STAGE} AS final
 ARG UID
 
 ARG CACHE_HOME
-COPY --link --chown=$UID:0 --chmod=775 --from=load_align ${CACHE_HOME} ${CACHE_HOME}
+COPY --chown=$UID:0 --chmod=775 --from=load_align ${CACHE_HOME} ${CACHE_HOME}
 
-ARG WHISPER_MODEL
-ENV WHISPER_MODEL=${WHISPER_MODEL}
 ARG LANG
 ENV LANG=${LANG}
+ARG WHISPER_MODEL
+ENV WHISPER_MODEL=${WHISPER_MODEL}
 
 # Take the first language from LANG env variable
 ENTRYPOINT [ "dumb-init", "--", "/bin/sh", "-c", "LANG=$(echo ${LANG} | cut -d ' ' -f1); whisperx --model \"${WHISPER_MODEL}\" --language \"${LANG}\" \"$@\"" ]
