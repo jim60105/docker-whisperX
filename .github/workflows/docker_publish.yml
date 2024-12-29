@@ -164,8 +164,8 @@ jobs:
           - base
           - small
           - medium
-          - large-v2
           - large-v3
+          - distil-large-v3
     needs: docker-no_model # wait for docker-no_model to finish
 
     steps:
@@ -255,8 +255,8 @@ jobs:
           - base
           - small
           - medium
-          - large-v2
           - large-v3
+          - distil-large-v3
     needs:
       - docker-no_model # wait for docker-no_model to finish
       - docker-cache # wait for docker-cache to finish
@@ -333,9 +333,9 @@ jobs:
           id=$(echo ${{ github.sha }} | cut -c 1-7)
           echo "id=$id" >> $GITHUB_OUTPUT
 
-      - name: Test large-v3-zh docker image
+      - name: Test distil-large-v3-zh docker image
         run: |
-          docker run --group-add 0 -v ".:/app" ghcr.io/jim60105/whisperx:large-v3-zh-${{ steps.get-sha.outputs.id }} -- --device cpu --compute_type int8 --output_format srt .github/workflows/test/zh.webm;
+          docker run --group-add 0 -v ".:/app" ghcr.io/jim60105/whisperx:distil-large-v3-zh-${{ steps.get-sha.outputs.id }} -- --device cpu --compute_type int8 --output_format srt .github/workflows/test/zh.webm;
           if [ ! -f zh.srt ]; then
             echo "The zh.srt file does not exist"
             exit 1
