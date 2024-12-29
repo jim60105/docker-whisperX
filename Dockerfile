@@ -53,6 +53,7 @@ ARG PIP_USER="true"
 ARG PIP_NO_WARN_SCRIPT_LOCATION=0
 ARG PIP_ROOT_USER_ACTION="ignore"
 ARG PIP_NO_COMPILE="true"
+ARG PIP_NO_BINARY="all"
 ARG PIP_DISABLE_PIP_VERSION_CHECK="true"
 
 # Install requirements
@@ -71,10 +72,11 @@ RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/r
 # Install whisperX
 RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/pip \
     --mount=source=whisperX,target=.,rw \
-    pip install . && \
-    # Cleanup
-    find "/root/.local" -name '*.pyc' -print0 | xargs -0 rm -f || true ; \
-    find "/root/.local" -type d -name '__pycache__' -print0 | xargs -0 rm -rf || true ;
+    --mount=type=tmpfs,target=/tmp \
+    pip install .
+
+# Test whisperX
+RUN python3 -c 'import whisperx;'
 
 ########################################
 # Final stage for no_model
@@ -102,6 +104,7 @@ ENV TORCH_HOME=${TORCH_HOME}
 ENV HF_HOME=${HF_HOME}
 
 RUN install -d -m 775 -o $UID -g 0 /licenses && \
+    install -d -m 775 -o $UID -g 0 /root && \
     install -d -m 775 -o $UID -g 0 ${CACHE_HOME} && \
     install -d -m 775 -o $UID -g 0 ${CONFIG_HOME}
 
@@ -122,11 +125,6 @@ COPY --link --chown=$UID:0 --chmod=775 --from=build /root/.local /home/$UID/.loc
 
 ENV PATH="/home/$UID/.local/bin:$PATH"
 ENV PYTHONPATH="/home/$UID/.local/lib/python3.11/site-packages"
-
-ARG WHISPER_MODEL
-ENV WHISPER_MODEL=
-ARG LANG
-ENV LANG=
 
 WORKDIR /app
 
@@ -160,29 +158,32 @@ LABEL name="jim60105/docker-whisperX" \
 ########################################
 FROM ${NO_MODEL_STAGE} AS load_whisper
 
-ARG TORCH_HOME
-ARG HF_HOME
+ARG CONFIG_HOME
+ARG XDG_CONFIG_HOME=${CONFIG_HOME}
+ARG HOME="/root"
 
 # Preload vad model
 RUN python3 -c 'from whisperx.vad import load_vad_model; load_vad_model("cpu");'
 
 # Preload fast-whisper
 ARG WHISPER_MODEL
-RUN python3 -c 'import faster_whisper; model = faster_whisper.WhisperModel("'${WHISPER_MODEL}'")'
+ENV WHISPER_MODEL=${WHISPER_MODEL}
+
+# Preload fast-whisper
+RUN echo "Preload whisper model: ${WHISPER_MODEL}" && \
+    python3 -c "import faster_whisper; model = faster_whisper.WhisperModel('${WHISPER_MODEL}')"
 
 ########################################
 # load_align stage
 ########################################
 FROM ${LOAD_WHISPER_STAGE} AS load_align
 
-ARG TORCH_HOME
-ARG HF_HOME
+ARG LANG
+ENV LANG=${LANG}
 
 # Preload align models
-ARG LANG
-
 RUN --mount=source=load_align_model.py,target=load_align_model.py \
-    for i in ${LANG}; do echo "Align lang $i"; python3 load_align_model.py "$i"; done
+    for i in ${LANG}; do echo "Preload align model: $i"; python3 load_align_model.py "$i"; done
 
 ########################################
 # Final stage with model
@@ -194,10 +195,10 @@ ARG UID
 ARG CACHE_HOME
 COPY --link --chown=$UID:0 --chmod=775 --from=load_align ${CACHE_HOME} ${CACHE_HOME}
 
-ARG WHISPER_MODEL
-ENV WHISPER_MODEL=${WHISPER_MODEL}
 ARG LANG
 ENV LANG=${LANG}
+ARG WHISPER_MODEL
+ENV WHISPER_MODEL=${WHISPER_MODEL}
 
 # Take the first language from LANG env variable
 ENTRYPOINT [ "dumb-init", "--", "/bin/sh", "-c", "LANG=$(echo ${LANG} | cut -d ' ' -f1); whisperx --model \"${WHISPER_MODEL}\" --language \"${LANG}\" \"$@\"" ]
