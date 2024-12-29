@@ -53,7 +53,11 @@ target "build" {
       "nn",
       "sk",
       "sl",
-      "hr"
+      "hr",
+      "ro",
+      "eu",
+      "gl",
+      "ka",
     ]
   }
 
