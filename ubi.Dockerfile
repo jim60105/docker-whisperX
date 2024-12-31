@@ -23,6 +23,10 @@ ARG HF_HOME=${CACHE_HOME}/huggingface
 ########################################
 FROM registry.access.redhat.com/ubi9/ubi-minimal AS base
 
+# RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
+ARG TARGETARCH
+ARG TARGETVARIANT
+
 ENV PYTHON_VERSION=3.11
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONIOENCODING=UTF-8
@@ -48,14 +52,14 @@ RUN --mount=type=cache,id=dnf-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/v
 ########################################
 FROM base AS build
 
+# RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
+ARG TARGETARCH
+ARG TARGETVARIANT
+
 # Install build time requirements
 RUN --mount=type=cache,id=dnf-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/dnf \
     microdnf -y install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
     git python3.11-pip findutils
-
-# RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
-ARG TARGETARCH
-ARG TARGETVARIANT
 
 WORKDIR /app
 
