@@ -48,7 +48,7 @@ jobs:
             VERSION=${{ github.ref_name }}
             RELEASE=${{ github.run_number }}
           platforms: linux/amd64
-          # Cache to regietry instead of gha to avoid the capacity limit.
+          # Cache to registry instead of gha to avoid the capacity limit.
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
 
@@ -80,7 +80,7 @@ jobs:
             VERSION=${{ github.ref_name }}
             RELEASE=${{ github.run_number }}
           platforms: linux/amd64, linux/arm64
-          # Cache to regietry instead of gha to avoid the capacity limit.
+          # Cache to registry instead of gha to avoid the capacity limit.
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
           sbom: true
@@ -114,7 +114,7 @@ jobs:
             VERSION=${{ github.ref_name }}
             RELEASE=${{ github.run_number }}
           platforms: linux/amd64
-          # Cache to regietry instead of gha to avoid the capacity limit.
+          # Cache to registry instead of gha to avoid the capacity limit.
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
 
@@ -147,7 +147,7 @@ jobs:
             VERSION=${{ github.ref_name }}
             RELEASE=${{ github.run_number }}
           platforms: linux/amd64, linux/arm64
-          # Cache to regietry instead of gha to avoid the capacity limit.
+          # Cache to registry instead of gha to avoid the capacity limit.
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
           sbom: true
@@ -196,7 +196,7 @@ jobs:
             VERSION=${{ github.ref_name }}
             RELEASE=${{ github.run_number }}
           platforms: linux/amd64, linux/arm64
-          # Cache to regietry instead of gha to avoid the capacity limit.
+          # Cache to registry instead of gha to avoid the capacity limit.
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
           sbom: true
@@ -239,7 +239,7 @@ jobs:
           - hi
           - ca
           - ml
-          # Disable language 'no' because this transcribe model is too large to build on the GitHub Actions
+          # Disable these languages because this transcribe model is too large to build on the GitHub Actions
           # https://github.com/jim60105/docker-whisperX/actions/runs/8405597972
           # - no
           # - nn
@@ -297,14 +297,14 @@ jobs:
             VERSION=${{ github.ref_name }}
             RELEASE=${{ github.run_number }}
           platforms: linux/amd64, linux/arm64
-          # Cache to regietry instead of gha to avoid the capacity limit.
+          # Cache to registry instead of gha to avoid the capacity limit.
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
           sbom: true
           provenance: true
 
-  test-large-v3-zh:
-    name: Test large-v3-zh docker image
+  test-distil-large-v3-zh:
+    name: Test distil-large-v3-zh docker image
     runs-on: ubuntu-latest
     needs: docker
     steps:
