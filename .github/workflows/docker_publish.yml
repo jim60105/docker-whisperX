@@ -247,7 +247,7 @@ jobs:
           - sl
           - hr
           - ro
-          - ru
+          - eu
           - gl
           - ka
         model:
