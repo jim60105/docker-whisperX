@@ -202,6 +202,56 @@ jobs:
           sbom: true
           provenance: true
 
+  # Build the distil-large-v3-en model (distil model seems to support only English)
+  docker-distil-large-v3-en:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    needs:
+      - docker-no_model # wait for docker-no_model to finish
+      - docker-cache # wait for docker-cache to finish
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup docker
+        id: setup
+        uses: ./.github/workflows/docker-reused-steps
+        with:
+          tag: distil-large-v3-en
+
+      - name: Get short SHA
+        id: get-sha
+        run: |
+          id=$(echo ${{ github.sha }} | cut -c 1-7)
+          echo "id=$id" >> $GITHUB_OUTPUT
+
+      - name: Build and push:distil-large-v3-en
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          target: final
+          push: true
+          tags: ${{ steps.setup.outputs.tags }}
+          labels: ${{ steps.setup.outputs.labels }}
+          build-args: |
+            WHISPER_MODEL=distil-large-v3
+            LANG=en
+            LOAD_WHISPER_STAGE=ghcr.io/jim60105/whisperx:cache-distil-large-v3-${{ steps.get-sha.outputs.id }}
+            NO_MODEL_STAGE=ghcr.io/jim60105/whisperx:no_model@${{ needs.docker-no_model.outputs.digest }}
+            VERSION=${{ github.ref_name }}
+            RELEASE=${{ github.run_number }}
+          platforms: linux/amd64, linux/arm64
+          # Cache to registry instead of gha to avoid the capacity limit.
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
+          sbom: true
+          provenance: true
+
   # Run the rest of the builds in parallel
   docker:
     # The type of runner that the job will run on
@@ -256,7 +306,6 @@ jobs:
           - small
           - medium
           - large-v3
-          - distil-large-v3
     needs:
       - docker-no_model # wait for docker-no_model to finish
       - docker-cache # wait for docker-cache to finish
@@ -303,8 +352,8 @@ jobs:
           sbom: true
           provenance: true
 
-  test-distil-large-v3-zh:
-    name: Test distil-large-v3-zh docker image
+  test-large-v3-zh:
+    name: Test large-v3-zh docker image
     runs-on: ubuntu-latest
     needs: docker
     steps:
@@ -333,9 +382,9 @@ jobs:
           id=$(echo ${{ github.sha }} | cut -c 1-7)
           echo "id=$id" >> $GITHUB_OUTPUT
 
-      - name: Test distil-large-v3-zh docker image
+      - name: Test large-v3-zh docker image
         run: |
-          docker run --group-add 0 -v ".:/app" ghcr.io/jim60105/whisperx:distil-large-v3-zh-${{ steps.get-sha.outputs.id }} -- --device cpu --compute_type int8 --output_format srt .github/workflows/test/zh.webm;
+          docker run --group-add 0 -v ".:/app" ghcr.io/jim60105/whisperx:large-v3-zh-${{ steps.get-sha.outputs.id }} -- --device cpu --compute_type int8 --output_format srt .github/workflows/test/zh.webm;
           if [ ! -f zh.srt ]; then
             echo "The zh.srt file does not exist"
             exit 1

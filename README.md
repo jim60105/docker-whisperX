@@ -42,12 +42,15 @@ docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:large-v3-ja -- -
 docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:no_model    -- --model tiny --language en --output_format srt audio.mp3
 ```
 
-The image tags are formatted as `WHISPER_MODEL`-`LANG`, for example, `tiny-en`, `base-de`, `large-v3-zh` or `distil-large-v3-ja`.  
+The image tags are formatted as `WHISPER_MODEL`-`LANG`, for example, `tiny-en`, `base-de` or `large-v3-zh`.  
 Please be aware that the whisper models `*.en`,  `large-v1`, `large-v2` have been excluded as I believe they are not frequently used. If you require these models, please refer to the following section to build them on your own.
 
 You can find the actual build matrix in [docker_publish.yml](.github/workflows/docker_publish.yml#L212) and all available tags at [ghcr.io](https://github.com/jim60105/docker-whisperX/pkgs/container/whisperx/versions?filters%5Bversion_type%5D=tagged).
 
 In addition, there is also a `no_model` tag that does not include any pre-downloaded models, also referred to as `latest`.
+
+> Added a `distil-large-v3-en` model.  
+> Only en, distil model seems to only support English.
 
 ## ⚡️ Preserve the download cache for the align models when working with various languages
 
