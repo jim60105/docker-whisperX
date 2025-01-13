@@ -162,8 +162,15 @@ ARG CONFIG_HOME
 ARG XDG_CONFIG_HOME=${CONFIG_HOME}
 ARG HOME="/root"
 
-# Preload vad model
-RUN python3 -c 'from whisperx.vad import load_vad_model; load_vad_model("cpu");'
+# Preload Silero vad model
+RUN python3 <<EOF
+import torch
+torch.hub.load(repo_or_dir='snakers4/silero-vad',
+               model='silero_vad',
+               force_reload=False,
+               onnx=False,
+               trust_repo=True)
+EOF
 
 # Preload fast-whisper
 ARG WHISPER_MODEL
