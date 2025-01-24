@@ -300,6 +300,7 @@ jobs:
           - eu
           - gl
           - ka
+          - id
         model:
           - tiny
           - base
