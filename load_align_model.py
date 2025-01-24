@@ -46,6 +46,7 @@ DEFAULT_ALIGN_MODELS_HF = {
     "eu": "stefan-it/wav2vec2-large-xlsr-53-basque",
     "gl": "ifrz/wav2vec2-large-xlsr-galician",
     "ka": "xsway/wav2vec2-large-xlsr-georgian",
+    "id": "Bagus/wav2vec2-large-xlsr-bahasa-indonesia"
 }
 
 # From https://github.com/m-bain/whisperX/issues/189#issuecomment-1523392800
