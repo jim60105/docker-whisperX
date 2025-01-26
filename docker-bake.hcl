@@ -58,6 +58,7 @@ target "build" {
       "eu",
       "gl",
       "ka",
+      "lv",
     ]
   }
 
