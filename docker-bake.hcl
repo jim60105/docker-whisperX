@@ -59,6 +59,7 @@ target "build" {
       "gl",
       "ka",
       "lv",
+      "tl",
     ]
   }
 

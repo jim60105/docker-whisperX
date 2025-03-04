@@ -301,6 +301,7 @@ jobs:
           - gl
           - ka
           - lv
+          - tl
         model:
           - tiny
           - base
