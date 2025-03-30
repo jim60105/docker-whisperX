@@ -65,7 +65,6 @@ ENV UV_PROJECT_ENVIRONMENT=/venv
 ENV VIRTUAL_ENV=/venv
 ENV UV_LINK_MODE=copy
 ENV UV_PYTHON_DOWNLOADS=0
-ENV UV_INDEX=https://download.pytorch.org/whl/cu121
 
 # Install torch separately as required
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
