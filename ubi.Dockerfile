@@ -56,44 +56,42 @@ FROM base AS build
 ARG TARGETARCH
 ARG TARGETVARIANT
 
-# Install build time requirements
-RUN --mount=type=cache,id=dnf-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/dnf \
-    microdnf -y install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
-    git python3.11-pip findutils
-
 WORKDIR /app
 
-# Install under /root/.local
-ARG PIP_USER="true"
-ARG PIP_NO_WARN_SCRIPT_LOCATION=0
-ARG PIP_ROOT_USER_ACTION="ignore"
-ARG PIP_NO_COMPILE="true"
-ARG PIP_NO_BINARY="all"
-ARG PIP_DISABLE_PIP_VERSION_CHECK="true"
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Install requirements
-RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/pip \
-    pip3.11 install -U --force-reinstall pip setuptools wheel && \
-    pip3.11 install -U --extra-index-url https://download.pytorch.org/whl/cu121 \
-    torch==2.2.2 torchaudio==2.2.2 \
-    pyannote.audio==3.1.1 \
-    # https://github.com/jim60105/docker-whisperX/issues/40
-    "numpy<2.0"
+ENV UV_PROJECT_ENVIRONMENT=/venv
+ENV VIRTUAL_ENV=/venv
+ENV UV_LINK_MODE=copy
+ENV UV_PYTHON_DOWNLOADS=0
+ENV UV_INDEX=https://download.pytorch.org/whl/cu121
 
-RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/pip \
-    --mount=source=whisperX/requirements.txt,target=requirements.txt \
-    pip3.11 install -r requirements.txt
+# Install torch separately as required
+RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
+    uv venv --system-site-packages /venv && \
+    uv pip install -U \
+    torch==2.5.1 torchaudio==2.5.1 \
+    pyannote.audio==3.3.2
 
-# Install whisperX
-RUN --mount=type=cache,id=pip-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/pip \
+# Install whisperX dependencies
+RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
+    --mount=type=bind,source=whisperX/pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=whisperX/uv.lock,target=uv.lock \
+    uv sync --frozen --no-dev --no-install-project --no-editable
+
+# Install whisperX project
+RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
     --mount=source=whisperX,target=.,rw \
     --mount=type=tmpfs,target=/tmp \
-    pip3.11 install . && \
-    # Cleanup (Needed for Podman as it DOES write back to the build context)
-    rm -rf build
+    uv sync --frozen --no-dev --no-editable && \
+    uv tool install whisperx
 
 # Test whisperX
-RUN python3 -c 'import whisperx;'
+ENV PATH="/venv/bin:$PATH"
+ENV PYTHONPATH="/venv/lib/python3.11/site-packages"
+RUN python3 -c 'import whisperx;' && \
+    whisperx -h
 
 ########################################
 # Final stage for no_model
@@ -130,10 +128,10 @@ COPY --chown=$UID:0 --chmod=775 whisperX/LICENSE /licenses/whisperX.LICENSE
 
 # Copy dependencies and code (and support arbitrary uid for OpenShift best practice)
 # https://docs.openshift.com/container-platform/4.14/openshift_images/create-images.html#use-uid_create-images
-COPY --chown=$UID:0 --chmod=775 --from=build /root/.local /root/.local
+COPY --chown=$UID:0 --chmod=775 --from=build /venv /venv
 
-ENV PATH="/root/.local/bin:$PATH"
-ENV PYTHONPATH="/root/.local/lib/python3.11/site-packages"
+ENV PATH="/venv/bin:$PATH"
+ENV PYTHONPATH="/venv/lib/python3.11/site-packages"
 
 WORKDIR /app
 
