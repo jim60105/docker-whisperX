@@ -71,7 +71,7 @@ ENV UV_INDEX=https://download.pytorch.org/whl/cu126
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
     uv venv --system-site-packages /venv && \
     uv pip install -U \
-    torch==2.6.0+cu126 torchaudio==2.6.0+cu126 \
+    torch==2.6.0+cu126 \
     pyannote.audio==3.3.2
 
 # Install whisperX dependencies
@@ -111,12 +111,9 @@ ENV NV_CUDA_COMPAT_PACKAGE=cuda-compat-12-6
 # https://docs.nvidia.com/cuda/cuda-installation-guide-linux/#network-repo-installation-for-rhel-rocky
 RUN --mount=type=cache,id=dnf-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/dnf \
     rpm --import https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/D42D0685.pub && \
-    echo "Installing CUDA repo for $TARGETPLATFORM" && \
-    if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
-    curl -o /etc/yum.repos.d/cuda-rhel9.repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo ; \
-    else \
-    curl -o /etc/yum.repos.d/cuda-rhel9.repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/aarch64/cuda-rhel9.repo ; \
-    fi
+    echo "Installing CUDA repo" && \
+    curl -o /etc/yum.repos.d/cuda-rhel9-amd64.repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo && \
+    curl -o /etc/yum.repos.d/cuda-rhel9-sbsa.repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/sbsa/cuda-rhel9.repo
 
 RUN --mount=type=cache,id=dnf-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/dnf \
     microdnf -y upgrade --refresh --best --nodocs --noplugins --setopt=install_weak_deps=0 && \

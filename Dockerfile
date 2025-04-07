@@ -61,7 +61,7 @@ ENV UV_INDEX=https://download.pytorch.org/whl/cu126
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
     uv venv --system-site-packages /venv && \
     uv pip install -U \
-    torch==2.6.0+cu126 torchaudio==2.6.0+cu126 \
+    torch==2.6.0+cu126 \
     pyannote.audio==3.3.2
 
 # Install whisperX dependencies
