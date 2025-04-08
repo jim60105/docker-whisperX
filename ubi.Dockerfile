@@ -65,12 +65,13 @@ ENV UV_PROJECT_ENVIRONMENT=/venv
 ENV VIRTUAL_ENV=/venv
 ENV UV_LINK_MODE=copy
 ENV UV_PYTHON_DOWNLOADS=0
+ENV UV_INDEX=https://download.pytorch.org/whl/cu126
 
 # Install torch separately as required
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
     uv venv --system-site-packages /venv && \
     uv pip install -U \
-    torch==2.5.1 torchaudio==2.5.1 \
+    torch==2.6.0+cu126 \
     pyannote.audio==3.3.2
 
 # Install whisperX dependencies
@@ -86,19 +87,42 @@ RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/ro
     uv sync --frozen --no-dev --no-editable && \
     uv tool install whisperx
 
-# Test whisperX
-ENV PATH="/venv/bin:$PATH"
-ENV PYTHONPATH="/venv/lib/python3.11/site-packages"
-RUN python3 -c 'import whisperx;' && \
-    whisperx -h
-
 ########################################
 # Final stage for no_model
 ########################################
 FROM base AS no_model
 
+# RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
+ARG TARGETARCH
+ARG TARGETVARIANT
+ARG TARGETPLATFORM
+
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
+WORKDIR /tmp
+
+ENV CUDA_VERSION=12.6.3
+ENV NV_CUDA_CUDART_VERSION=12.6.77-1
+ENV NVIDIA_REQUIRE_CUDA=cuda>=12.6
+ENV NV_CUDA_COMPAT_PACKAGE=cuda-compat-12-6
+
+# Install CUDA partially
+# https://docs.nvidia.com/cuda/cuda-installation-guide-linux/#network-repo-installation-for-rhel-rocky
+RUN --mount=type=cache,id=dnf-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/dnf \
+    rpm --import https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/D42D0685.pub && \
+    echo "Installing CUDA repo" && \
+    curl -o /etc/yum.repos.d/cuda-rhel9-amd64.repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo && \
+    curl -o /etc/yum.repos.d/cuda-rhel9-sbsa.repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/sbsa/cuda-rhel9.repo
+
+RUN --mount=type=cache,id=dnf-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/dnf \
+    microdnf -y upgrade --refresh --best --nodocs --noplugins --setopt=install_weak_deps=0 && \
+    microdnf -y install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
+    # Installing the whole CUDA typically increases the image size by approximately **8GB**.
+    # To decrease the image size, we opt to install only the necessary libraries.
+    # Here is the package list for your reference: https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/
+    # !If you experience any related issues, replace the following line with `cuda-12-6` to obtain the complete CUDA package.
+    cuda-cudart-12-6-${NV_CUDA_CUDART_VERSION} ${NV_CUDA_COMPAT_PACKAGE} libcudnn9-cuda-12 libcusparselt0 libcusparse-12-6 cuda-cupti-12-6 libcufft-12-6 libcurand-12-6 libcublas-12-6 libnccl libnvjitlink-12-6
 
 ARG CACHE_HOME
 ARG CONFIG_HOME
@@ -129,8 +153,13 @@ COPY --chown=$UID:0 --chmod=775 whisperX/LICENSE /licenses/whisperX.LICENSE
 # https://docs.openshift.com/container-platform/4.14/openshift_images/create-images.html#use-uid_create-images
 COPY --chown=$UID:0 --chmod=775 --from=build /venv /venv
 
-ENV PATH="/venv/bin:$PATH"
+ENV PATH="/venv/bin:/usr/local/cuda-12.6/bin${PATH:+:${PATH}}"
 ENV PYTHONPATH="/venv/lib/python3.11/site-packages"
+ENV LD_LIBRARY_PATH=/venv/lib/python3.11/site-packages/nvidia/cudnn/lib:/usr/local/cuda-12.6/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+
+# Test whisperX
+RUN python3 -c 'import whisperx;' && \
+    whisperx -h
 
 WORKDIR /app
 
