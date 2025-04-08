@@ -79,7 +79,7 @@ jobs:
           build-args: |
             VERSION=${{ github.ref_name }}
             RELEASE=${{ github.run_number }}
-          platforms: linux/amd64, linux/arm64
+          platforms: linux/amd64 #, linux/arm64
           # Cache to registry instead of gha to avoid the capacity limit.
           cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
