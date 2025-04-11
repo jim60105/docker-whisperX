@@ -28,6 +28,10 @@ Install an NVIDIA GPU Driver if you do not already have one installed.
 Install the NVIDIA Container Toolkit with this guide.  
 <https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html>
 
+> [!TIP]  
+> I also have a Chinese blog about this topic:  
+> [Podman GPU Configuration Notes for Fedora/RHEL](https://xn--jgy.tw/Container/configuring-gpu-in-linux-podman/)
+
 ## 📦 Available Pre-built Image
 
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=Docker%20Build) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/jim60105/docker-whisperX/master?label=Date)
@@ -117,7 +121,7 @@ docker run --gpus all -it -v ".:/app" whisperx:large-v3-ja -- --output_format sr
 
 ## ⛑️ Red Hat UBI based Image
 
-[![Image Scan UBI](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/scan_ubi.yml?label=Image%20Scan%20UBI)](https://github.com/jim60105/docker-whisperX/actions/workflows/scan_ubi.yml)
+![Docker Build](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=Docker%20Build) [![Image Scan UBI](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/scan_ubi.yml?label=Image%20Scan%20UBI)](https://github.com/jim60105/docker-whisperX/actions/workflows/scan_ubi.yml)
 
 I have created an alternative [ubi.Dockerfile](ubi.Dockerfile) that is based on the **Red Hat Universal Base Image (UBI)** image, unlike the default one which used the **Python official image** as the base image. If you are a Red Hat subscriber, I believe you will find its benefits.
 
