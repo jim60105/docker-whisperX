@@ -71,7 +71,7 @@ RUN --mount=type=cache,id=dnf-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/v
     # To decrease the image size, we opt to install only the necessary libraries.
     # Here is the package list for your reference: https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/
     # !If you experience any related issues, replace the following line with `cuda-12-6` to obtain the complete CUDA package.
-    cuda-cudart-12-6-${NV_CUDA_CUDART_VERSION} ${NV_CUDA_COMPAT_PACKAGE} libcudnn9-cuda-12 libcusparselt0 libcusparse-12-6 cuda-cupti-12-6 libcufft-12-6 libcurand-12-6 libcublas-12-6 libnccl libnvjitlink-12-6
+    cuda-cudart-12-6-${NV_CUDA_CUDART_VERSION} ${NV_CUDA_COMPAT_PACKAGE} libcudnn9-cuda-12 libcusparselt0 libcusparse-12-6 cuda-cupti-12-6 libcufft-12-6 libcurand-12-6 libcublas-12-6 libnccl libnvjitlink-12-6 cuda-nvrtc-12-6
 
 ENV PATH="/usr/local/cuda-12.6/bin${PATH:+:${PATH}}"
 ENV LD_LIBRARY_PATH=/venv/lib/python3.11/site-packages/nvidia/cudnn/lib:/usr/local/cuda-12.6/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
