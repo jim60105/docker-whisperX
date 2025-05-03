@@ -59,7 +59,7 @@ WORKDIR /tmp
 RUN --mount=type=cache,id=apt-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/apt \
     --mount=type=cache,id=aptlists-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/lib/apt/lists \
     apt-get update && apt-get install -y --no-install-recommends \
-    libgomp1=12.2.0-14 libsndfile1=1.2.0-1
+    libgomp1 libsndfile1
 
 # Select the base stage by target architecture
 FROM prepare_base_$TARGETARCH$TARGETVARIANT AS base
