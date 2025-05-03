@@ -20,10 +20,8 @@ ARG HF_HOME=${CACHE_HOME}/huggingface
 
 ########################################
 # Base stage for amd64
-# Only install CUDA for amd64
-# https://github.com/jim60105/docker-whisperX/issues/69
 ########################################
-FROM python:3.11-slim AS prepare_base_amd64
+FROM docker.io/library/python:3.11-slim-bullseye AS prepare_base_amd64
 
 # RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
 ARG TARGETARCH
@@ -34,36 +32,21 @@ WORKDIR /tmp
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
-ENV CUDA_VERSION=12.6.3
-ENV NV_CUDA_CUDART_VERSION=12.6.77-1
-ENV NVIDIA_REQUIRE_CUDA=cuda>=12.6
-ENV NV_CUDA_COMPAT_PACKAGE=cuda-compat-12-6
-
-# Install CUDA partially
-# https://docs.nvidia.com/cuda/cuda-installation-guide-linux/#debian
-
-ADD https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64/cuda-keyring_1.1-1_all.deb /tmp/cuda-keyring_x86_64.deb
+# Install libcudnn8
+ADD https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/cuda-keyring_1.1-1_all.deb /tmp/cuda-keyring_x86_64.deb
 
 RUN --mount=type=cache,id=apt-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/apt \
     --mount=type=cache,id=aptlists-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/lib/apt/lists \
     dpkg -i cuda-keyring_x86_64.deb && \
     rm -f cuda-keyring_x86_64.deb && \
-    sed -i 's/^Components: main$/& contrib/' /etc/apt/sources.list.d/debian.sources && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-    # Installing the whole CUDA typically increases the image size by approximately **8GB**.
-    # To decrease the image size, we opt to install only the necessary libraries.
-    # Here is the package list for your reference: https://developer.download.nvidia.com/compute/cuda/repos/debian12/x86_64
-    # !If you experience any related issues, replace the following line with `cuda-12-6` to obtain the complete CUDA package.
-    cuda-cudart-12-6=${NV_CUDA_CUDART_VERSION} ${NV_CUDA_COMPAT_PACKAGE} libcudnn9-cuda-12 libcusparselt0 libcusparse-12-6 cuda-cupti-12-6 libcufft-12-6 libcurand-12-6 libcublas-12-6 libnvjitlink-12-6 cuda-nvrtc-12-6
-
-ENV PATH="/usr/local/cuda-12.6/bin${PATH:+:${PATH}}"
-ENV LD_LIBRARY_PATH=/venv/lib/python3.11/site-packages/nvidia/cudnn/lib:/usr/local/cuda-12.6/lib64
+    libcudnn8
 
 ########################################
 # Base stage for arm64
 ########################################
-FROM python:3.11-slim AS prepare_base_arm64
+FROM docker.io/library/python:3.11-slim-bullseye AS prepare_base_arm64
 
 # RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
 ARG TARGETARCH
@@ -82,9 +65,9 @@ RUN --mount=type=cache,id=apt-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/v
 FROM prepare_base_$TARGETARCH$TARGETVARIANT AS base
 
 ########################################
-# Build stage for amd64
+# Build stage
 ########################################
-FROM base AS prepare_build_amd64
+FROM base AS build
 
 # RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
 ARG TARGETARCH
@@ -99,13 +82,12 @@ ENV UV_PROJECT_ENVIRONMENT=/venv
 ENV VIRTUAL_ENV=/venv
 ENV UV_LINK_MODE=copy
 ENV UV_PYTHON_DOWNLOADS=0
-ENV UV_INDEX=https://download.pytorch.org/whl/cu126
 
 # Install big dependencies separately for layer caching
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
     uv venv --system-site-packages /venv && \
     uv pip install --no-deps \
-    torch==2.6.0+cu126 \
+    torch==2.5.1 \
     pyannote.audio==3.3.2
 
 # Install whisperX dependencies
@@ -117,54 +99,7 @@ RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/ro
 # Install whisperX project
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
     --mount=source=whisperX,target=.,rw \
-    uv sync --frozen --no-dev --no-editable && \
-    #! libnccl2 is not available in the debian12 apt repo, so we get it through pip
-    # https://packages.debian.org/unstable/libnccl2
-    # https://pypi.org/project/nvidia-nccl-cu12/
-    uv pip install nvidia-nccl-cu12
-
-########################################
-# Build stage for arm64
-########################################
-FROM base AS prepare_build_arm64
-
-# RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
-ARG TARGETARCH
-ARG TARGETVARIANT
-
-WORKDIR /app
-
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-
-ENV UV_PROJECT_ENVIRONMENT=/venv
-ENV VIRTUAL_ENV=/venv
-ENV UV_LINK_MODE=copy
-ENV UV_PYTHON_DOWNLOADS=0
-ENV UV_INDEX=https://download.pytorch.org/whl/cpu
-
-# Install torch separately as required
-RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
-    uv venv --system-site-packages /venv && \
-    uv pip install --no-deps \
-    torch==2.6.0+cpu \
-    pyannote.audio==3.3.2
-
-# Install whisperX dependencies
-RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
-    --mount=type=bind,source=whisperX/pyproject.toml,target=pyproject.toml,rw \
-    --mount=type=bind,source=whisperX/uv.lock,target=uv.lock,rw \
-    uv add torch==2.6.0+cpu && \
-    uv sync --frozen --no-dev --no-install-project --no-editable
-
-# Install whisperX project
-RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
-    --mount=source=whisperX,target=.,rw \
-    uv add torch==2.6.0+cpu && \
     uv sync --frozen --no-dev --no-editable
-
-# Select the build stage by target architecture
-FROM prepare_build_$TARGETARCH$TARGETVARIANT AS build
 
 ########################################
 # Final stage for no_model
