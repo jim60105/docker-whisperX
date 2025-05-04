@@ -52,14 +52,6 @@ WORKDIR /tmp
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
-# Install libcudnn8
-RUN --mount=type=cache,id=dnf-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/dnf \
-    rpm --import https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/D42D0685.pub && \
-    curl -o /etc/yum.repos.d/cuda-rhel9.repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo && \
-    microdnf -y upgrade --refresh --best --nodocs --noplugins --setopt=install_weak_deps=0 && \
-    microdnf -y install --setopt=install_weak_deps=0 --setopt=tsflags=nodocs \
-    libcudnn8
-
 ########################################
 # Base stage for arm64
 ########################################
@@ -103,8 +95,8 @@ ENV UV_PYTHON_DOWNLOADS=0
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
     uv venv --system-site-packages /venv && \
     uv pip install --no-deps \
-    torch==2.5.1 \
-    pyannote.audio==3.3.2
+    "torch<2.4.0" \
+    "pyannote.audio==3.3.2"
 
 # Install whisperX dependencies
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \

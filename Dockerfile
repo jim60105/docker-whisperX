@@ -32,17 +32,6 @@ WORKDIR /tmp
 ENV NVIDIA_VISIBLE_DEVICES=all
 ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
-# Install libcudnn8
-ADD https://developer.download.nvidia.com/compute/cuda/repos/debian11/x86_64/cuda-keyring_1.1-1_all.deb /tmp/cuda-keyring_x86_64.deb
-
-RUN --mount=type=cache,id=apt-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/apt \
-    --mount=type=cache,id=aptlists-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/lib/apt/lists \
-    dpkg -i cuda-keyring_x86_64.deb && \
-    rm -f cuda-keyring_x86_64.deb && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-    libcudnn8
-
 ########################################
 # Base stage for arm64
 ########################################
@@ -87,8 +76,8 @@ ENV UV_PYTHON_DOWNLOADS=0
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
     uv venv --system-site-packages /venv && \
     uv pip install --no-deps \
-    torch==2.5.1 \
-    pyannote.audio==3.3.2
+    "torch<2.4.0" \
+    "pyannote.audio==3.3.2"
 
 # Install whisperX dependencies
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
