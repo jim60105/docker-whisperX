@@ -20,6 +20,8 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write
+  attestations: write
 
 jobs:
   # Build the ubi-no_model without cache export
@@ -71,6 +73,7 @@ jobs:
 
       - name: Build and push:ubi-no_model
         uses: docker/build-push-action@v5
+        id: build_push_ubi
         with:
           context: .
           file: ./ubi.Dockerfile
@@ -87,6 +90,12 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
           sbom: true
           provenance: true
+
+      - name: Attest GHCR image (ubi-no_model)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/whisperx
+          subject-digest: ${{ steps.build_push_ubi.outputs.digest }}
 
   # Run the no_model build first ensure that the code at least builds
   docker-no_model:
@@ -154,6 +163,12 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
           sbom: true
           provenance: true
+
+      - name: Attest GHCR image (no_model)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/whisperx
+          subject-digest: ${{ steps.publish.outputs.digest }}
 
   # Download whisper model cache
   docker-cache:
@@ -229,6 +244,7 @@ jobs:
 
       - name: Build and push:distil-large-v3-en
         uses: docker/build-push-action@v5
+        id: build_push_distil
         with:
           context: .
           file: ./Dockerfile
@@ -249,6 +265,12 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
           sbom: true
           provenance: true
+
+      - name: Attest GHCR image (distil-large-v3-en)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/whisperx
+          subject-digest: ${{ steps.build_push_distil.outputs.digest }}
 
   # Run the rest of the builds in parallel
   docker:
@@ -329,6 +351,7 @@ jobs:
 
       - name: Build and push:${{ matrix.model }}-${{ matrix.lang }}
         uses: docker/build-push-action@v5
+        id: build_push_matrix
         with:
           context: .
           file: ./Dockerfile
@@ -349,6 +372,12 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
           sbom: true
           provenance: true
+
+      - name: Attest GHCR image (${{ matrix.model }}-${{ matrix.lang }})
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/whisperx
+          subject-digest: ${{ steps.build_push_matrix.outputs.digest }}
 
   test-large-v3-zh:
     name: Test large-v3-zh docker image
