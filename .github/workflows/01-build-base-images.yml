@@ -179,7 +179,10 @@ jobs:
         id: get_digest
         run: |
           # Get the digest of the manifest list we just created
-          IMAGE_TAG=$(jq -cr '.tags[0]' <<<$DOCKER_METADATA_OUTPUT_JSON)
+          echo "Available GHCR tags:"
+          jq -cr '.tags[] | select(startswith("ghcr.io/"))' <<<$DOCKER_METADATA_OUTPUT_JSON
+          IMAGE_TAG=$(jq -cr '.tags[] | select(startswith("ghcr.io/"))' <<<$DOCKER_METADATA_OUTPUT_JSON | head -n1)
+          echo "Using tag for digest lookup: $IMAGE_TAG"
           DIGEST=$(docker buildx imagetools inspect "$IMAGE_TAG" --format "{{.Manifest.Digest}}")
           echo "manifest_digest=$DIGEST" >> $GITHUB_OUTPUT
 
@@ -346,7 +349,10 @@ jobs:
         id: get_digest
         run: |
           # Get the digest of the manifest list we just created
-          IMAGE_TAG=$(jq -cr '.tags[0]' <<<$DOCKER_METADATA_OUTPUT_JSON)
+          echo "Available GHCR tags:"
+          jq -cr '.tags[] | select(startswith("ghcr.io/"))' <<<$DOCKER_METADATA_OUTPUT_JSON
+          IMAGE_TAG=$(jq -cr '.tags[] | select(startswith("ghcr.io/"))' <<<$DOCKER_METADATA_OUTPUT_JSON | head -n1)
+          echo "Using tag for digest lookup: $IMAGE_TAG"
           DIGEST=$(docker buildx imagetools inspect "$IMAGE_TAG" --format "{{.Manifest.Digest}}")
           echo "manifest_digest=$DIGEST" >> $GITHUB_OUTPUT
 
