@@ -78,6 +78,7 @@ RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/ro
     uv pip install --no-deps --index "https://download.pytorch.org/whl/cu128" \
     "torch==2.7.1+cu128" \
     "torchaudio" \
+    "triton" \
     "pyannote.audio==3.3.2"
 
 # Install whisperX dependencies
