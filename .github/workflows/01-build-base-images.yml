@@ -1,0 +1,164 @@
+# Build base images workflow
+# This workflow builds the ubi-no_model and no_model base images
+name: "01-build-base-images"
+
+on:
+  workflow_run:
+    workflows: ["docker_publish"]
+    types: [completed]
+
+# Sets the permissions granted to the GITHUB_TOKEN for the actions in this job.
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  # Build the ubi-no_model without cache export
+  docker-ubi-no_model:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup docker
+        id: setup
+        uses: ./.github/workflows/docker-reused-steps
+        with:
+          tag: ubi-no_model
+
+      - name: Build:ubi-no_model
+        uses: docker/build-push-action@v5
+        id: build
+        with:
+          context: .
+          file: ./ubi.Dockerfile
+          load: true
+          target: no_model
+          labels: ${{ steps.setup.outputs.labels }}
+          build-args: |
+            VERSION=${{ github.event.workflow_run.head_sha }}
+            RELEASE=${{ github.event.workflow_run.run_number }}
+          platforms: linux/amd64
+          # Cache to registry instead of gha to avoid the capacity limit.
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
+
+      - name: Test ubi-no_model docker image
+        run: |
+          docker run --group-add 0 -v ".:/app" ${{ steps.build.outputs.imageid }} -- --model base --language en --device cpu --compute_type int8 --output_format srt .github/workflows/test/en.webm;
+          if [ ! -f en.srt ]; then
+            echo "The en.srt file does not exist"
+            exit 1
+          fi
+          echo "cat en.srt:";
+          cat en.srt;
+          if ! grep -qi 'no' en.srt; then
+            echo "The en.srt file does not contain the word 'no'"
+            exit 1
+          fi
+          echo "Test passed."
+
+      - name: Build and push:ubi-no_model
+        uses: docker/build-push-action@v5
+        id: build_push_ubi
+        with:
+          context: .
+          file: ./ubi.Dockerfile
+          push: true
+          target: no_model
+          tags: ${{ steps.setup.outputs.tags }}
+          labels: ${{ steps.setup.outputs.labels }}
+          build-args: |
+            VERSION=${{ github.event.workflow_run.head_sha }}
+            RELEASE=${{ github.event.workflow_run.run_number }}
+          platforms: linux/amd64, linux/arm64
+          # Cache to registry instead of gha to avoid the capacity limit.
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
+          sbom: true
+          provenance: true
+
+      - name: Attest GHCR image (ubi-no_model)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/whisperx
+          subject-digest: ${{ steps.build_push_ubi.outputs.digest }}
+
+  # Run the no_model build first ensure that the code at least builds
+  docker-no_model:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      digest: ${{ steps.publish.outputs.digest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup docker
+        id: setup
+        uses: ./.github/workflows/docker-reused-steps
+
+      - name: Build:no_model
+        uses: docker/build-push-action@v5
+        id: build
+        with:
+          context: .
+          file: ./Dockerfile
+          load: true
+          target: no_model
+          labels: ${{ steps.setup.outputs.labels }}
+          build-args: |
+            VERSION=${{ github.event.workflow_run.head_sha }}
+            RELEASE=${{ github.event.workflow_run.run_number }}
+          platforms: linux/amd64
+          # Cache to registry instead of gha to avoid the capacity limit.
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
+
+      - name: Test no_model docker image
+        run: |
+          docker run --group-add 0 -v ".:/app" ${{ steps.build.outputs.imageid }} -- --model base --language en --device cpu --compute_type int8 --output_format srt .github/workflows/test/en.webm;
+          if [ ! -f en.srt ]; then
+            echo "The en.srt file does not exist"
+            exit 1
+          fi
+          echo "cat en.srt:";
+          cat en.srt;
+          if ! grep -qi 'no' en.srt; then
+            echo "The en.srt file does not contain the word 'no'"
+            exit 1
+          fi
+          echo "Test passed."
+
+      - name: Build and push:no_model
+        uses: docker/build-push-action@v5
+        id: publish
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          target: no_model
+          tags: ${{ steps.setup.outputs.tags }}
+          labels: ${{ steps.setup.outputs.labels }}
+          build-args: |
+            VERSION=${{ github.event.workflow_run.head_sha }}
+            RELEASE=${{ github.event.workflow_run.run_number }}
+          platforms: linux/amd64, linux/arm64
+          # Cache to registry instead of gha to avoid the capacity limit.
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
+          sbom: true
+          provenance: true
+
+      - name: Attest GHCR image (no_model)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/whisperx
+          subject-digest: ${{ steps.publish.outputs.digest }}
