@@ -101,25 +101,27 @@ jobs:
         with:
           tag: ubi-no_model
 
-      - name: Build test image (amd64 only)
-        uses: docker/build-push-action@v6
-        id: build
+      - name: Download build digests
+        uses: actions/download-artifact@v4
         with:
-          context: .
-          file: ./ubi.Dockerfile
-          load: true
-          target: no_model
-          labels: ${{ steps.setup.outputs.labels }}
-          build-args: |
-            VERSION=${{ github.event.workflow_run.head_sha }}
-            RELEASE=${{ github.event.workflow_run.run_number }}
-          platforms: linux/amd64
-          cache-from: |
-            type=registry,ref=ghcr.io/${{ env.REGISTRY_IMAGE }}:cache-linux-amd64
+          name: digests-ubi-linux-amd64
+          path: /tmp/test-digests
+
+      - name: Pull test image from registry
+        id: pull
+        run: |
+          # Get the digest for amd64 platform
+          DIGEST=$(cat /tmp/test-digests/linux-amd64)
+          IMAGE_REF="ghcr.io/${{ env.REGISTRY_IMAGE }}@sha256:${DIGEST}"
+          echo "Pulling image: $IMAGE_REF"
+          docker pull "$IMAGE_REF"
+          # Tag the image for easier reference in tests
+          docker tag "$IMAGE_REF" "test-image:ubi-no_model"
+          echo "imageid=test-image:ubi-no_model" >> $GITHUB_OUTPUT
 
       - name: Test ubi-no_model docker image
         run: |
-          docker run --group-add 0 -v ".:/app" ${{ steps.build.outputs.imageid }} -- --model base --language en --device cpu --compute_type int8 --output_format srt .github/workflows/test/en.webm;
+          docker run --group-add 0 -v ".:/app" ${{ steps.pull.outputs.imageid }} -- --model base --language en --device cpu --compute_type int8 --output_format srt .github/workflows/test/en.webm;
           if [ ! -f en.srt ]; then
             echo "The en.srt file does not exist"
             exit 1
@@ -266,25 +268,27 @@ jobs:
         id: setup
         uses: ./.github/workflows/docker-reused-steps
 
-      - name: Build test image (amd64 only)
-        uses: docker/build-push-action@v6
-        id: build
+      - name: Download build digests
+        uses: actions/download-artifact@v4
         with:
-          context: .
-          file: ./Dockerfile
-          load: true
-          target: no_model
-          labels: ${{ steps.setup.outputs.labels }}
-          build-args: |
-            VERSION=${{ github.event.workflow_run.head_sha }}
-            RELEASE=${{ github.event.workflow_run.run_number }}
-          platforms: linux/amd64
-          cache-from: |
-            type=registry,ref=ghcr.io/${{ env.REGISTRY_IMAGE }}:cache-linux-amd64
+          name: digests-no_model-linux-amd64
+          path: /tmp/test-digests
+
+      - name: Pull test image from registry
+        id: pull
+        run: |
+          # Get the digest for amd64 platform
+          DIGEST=$(cat /tmp/test-digests/linux-amd64)
+          IMAGE_REF="ghcr.io/${{ env.REGISTRY_IMAGE }}@sha256:${DIGEST}"
+          echo "Pulling image: $IMAGE_REF"
+          docker pull "$IMAGE_REF"
+          # Tag the image for easier reference in tests
+          docker tag "$IMAGE_REF" "test-image:no_model"
+          echo "imageid=test-image:no_model" >> $GITHUB_OUTPUT
 
       - name: Test no_model docker image
         run: |
-          docker run --group-add 0 -v ".:/app" ${{ steps.build.outputs.imageid }} -- --model base --language en --device cpu --compute_type int8 --output_format srt .github/workflows/test/en.webm;
+          docker run --group-add 0 -v ".:/app" ${{ steps.pull.outputs.imageid }} -- --model base --language en --device cpu --compute_type int8 --output_format srt .github/workflows/test/en.webm;
           if [ ! -f en.srt ]; then
             echo "The en.srt file does not exist"
             exit 1
