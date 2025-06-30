@@ -1,0 +1,75 @@
+# Build distil-large-v3-en workflow
+# This workflow builds the distil-large-v3-en specialized image
+name: "03-build-distil-en"
+
+on:
+  workflow_run:
+    workflows: ["02-build-model-cache"]
+    types: [completed]
+
+# Sets the permissions granted to the GITHUB_TOKEN for the actions in this job.
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  # Build the distil-large-v3-en model (distil model seems to support only English)
+  docker-distil-large-v3-en:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup docker
+        id: setup
+        uses: ./.github/workflows/docker-reused-steps
+        with:
+          tag: distil-large-v3-en
+
+      - name: Get base image references
+        id: get-refs
+        run: |
+          # Get the commit SHA from the triggering workflow
+          COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          SHORT_SHA=$(echo $COMMIT_SHA | cut -c 1-7)
+          
+          # Set image references
+          NO_MODEL_IMAGE="ghcr.io/jim60105/whisperx:no_model-$SHORT_SHA"
+          CACHE_IMAGE="ghcr.io/jim60105/whisperx:cache-distil-large-v3-$SHORT_SHA"
+          
+          echo "no_model_image=$NO_MODEL_IMAGE" >> $GITHUB_OUTPUT
+          echo "cache_image=$CACHE_IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Build and push:distil-large-v3-en
+        uses: docker/build-push-action@v5
+        id: build_push_distil
+        with:
+          context: .
+          file: ./Dockerfile
+          target: final
+          push: true
+          tags: ${{ steps.setup.outputs.tags }}
+          labels: ${{ steps.setup.outputs.labels }}
+          build-args: |
+            WHISPER_MODEL=distil-large-v3
+            LANG=en
+            LOAD_WHISPER_STAGE=${{ steps.get-refs.outputs.cache_image }}
+            NO_MODEL_STAGE=${{ steps.get-refs.outputs.no_model_image }}
+            VERSION=${{ github.event.workflow_run.head_sha }}
+            RELEASE=${{ github.event.workflow_run.run_number }}
+          platforms: linux/amd64, linux/arm64
+          # Cache to registry instead of gha to avoid the capacity limit.
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
+          sbom: true
+          provenance: true
+
+      - name: Attest GHCR image (distil-large-v3-en)
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/whisperx
+          subject-digest: ${{ steps.build_push_distil.outputs.digest }}

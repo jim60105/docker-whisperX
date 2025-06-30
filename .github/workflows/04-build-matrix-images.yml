@@ -1,0 +1,178 @@
+# Build matrix images workflow
+# This workflow builds the full matrix of Docker images and runs tests
+name: "04-build-matrix-images"
+
+on:
+  workflow_run:
+    workflows: ["02-build-model-cache"]
+    types: [completed]
+
+# Sets the permissions granted to the GITHUB_TOKEN for the actions in this job.
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  # Run the rest of the builds in parallel
+  docker:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    strategy:
+      fail-fast: false
+      # max-parallel: 6
+      matrix:
+        lang:
+          - en
+          - fr
+          - de
+          - es
+          - it
+          - ja
+          - zh
+          - nl
+          - uk
+          - pt
+          - ar
+          - cs
+          - ru
+          - pl
+          - hu
+          - fi
+          - fa
+          - el
+          - tr
+          - da
+          - he
+          - vi
+          - ko
+          - ur
+          - te
+          - hi
+          - ca
+          - ml
+          # Disable these languages because this transcribe model is too large to build on the GitHub Actions
+          # https://github.com/jim60105/docker-whisperX/actions/runs/8405597972
+          # - no
+          # - nn
+          - sk
+          - sl
+          - hr
+          - ro
+          - eu
+          - gl
+          - ka
+          - lv
+          - tl
+        model:
+          - tiny
+          - base
+          - small
+          - medium
+          - large-v3
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup docker
+        id: setup
+        uses: ./.github/workflows/docker-reused-steps
+        with:
+          tag: ${{ matrix.model }}-${{ matrix.lang }}
+
+      - name: Get base image references
+        id: get-refs
+        run: |
+          # Get the commit SHA from the triggering workflow
+          COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          SHORT_SHA=$(echo $COMMIT_SHA | cut -c 1-7)
+          
+          # Set image references
+          NO_MODEL_IMAGE="ghcr.io/jim60105/whisperx:no_model-$SHORT_SHA"
+          CACHE_IMAGE="ghcr.io/jim60105/whisperx:cache-${{ matrix.model }}-$SHORT_SHA"
+          
+          echo "no_model_image=$NO_MODEL_IMAGE" >> $GITHUB_OUTPUT
+          echo "cache_image=$CACHE_IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Build and push:${{ matrix.model }}-${{ matrix.lang }}
+        uses: docker/build-push-action@v5
+        id: build_push_matrix
+        with:
+          context: .
+          file: ./Dockerfile
+          target: final
+          push: true
+          tags: ${{ steps.setup.outputs.tags }}
+          labels: ${{ steps.setup.outputs.labels }}
+          build-args: |
+            WHISPER_MODEL=${{ matrix.model }}
+            LANG=${{ matrix.lang }}
+            LOAD_WHISPER_STAGE=${{ steps.get-refs.outputs.cache_image }}
+            NO_MODEL_STAGE=${{ steps.get-refs.outputs.no_model_image }}
+            VERSION=${{ github.event.workflow_run.head_sha }}
+            RELEASE=${{ github.event.workflow_run.run_number }}
+          platforms: linux/amd64, linux/arm64
+          # Cache to registry instead of gha to avoid the capacity limit.
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
+          sbom: true
+          provenance: true
+
+      - name: Attest GHCR image (${{ matrix.model }}-${{ matrix.lang }})
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/whisperx
+          subject-digest: ${{ steps.build_push_matrix.outputs.digest }}
+
+  test-large-v3-zh:
+    name: Test large-v3-zh docker image
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    needs: docker
+    steps:
+      # We require additional space due to the large size of our image. (~10GB)
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: false
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows/test/**
+          sparse-checkout-cone-mode: false
+
+      - name: Get image reference
+        id: get-ref
+        run: |
+          # Get the commit SHA from the triggering workflow
+          COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          SHORT_SHA=$(echo $COMMIT_SHA | cut -c 1-7)
+          
+          # Set image reference
+          IMAGE="ghcr.io/jim60105/whisperx:large-v3-zh-$SHORT_SHA"
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Test large-v3-zh docker image
+        run: |
+          docker run --group-add 0 -v ".:/app" ${{ steps.get-ref.outputs.image }} -- --device cpu --compute_type int8 --output_format srt .github/workflows/test/zh.webm;
+          if [ ! -f zh.srt ]; then
+            echo "The zh.srt file does not exist"
+            exit 1
+          fi
+          echo "cat zh.srt:";
+          cat zh.srt;
+          if ! grep -qi -e '充满' -e '充滿' zh.srt; then
+            echo "The zh.srt file does not contain the word '充满' or '充滿'"
+            exit 1
+          fi
+          echo "Test passed."

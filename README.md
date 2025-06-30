@@ -1,6 +1,6 @@
 # docker-whisperX
 
-[![CodeFactor](https://www.codefactor.io/repository/github/jim60105/docker-whisperx/badge)](https://www.codefactor.io/repository/github/jim60105/docker-whisperx) ![Docker Build](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=Docker%20Build)
+[![CodeFactor](https://www.codefactor.io/repository/github/jim60105/docker-whisperx/badge)](https://www.codefactor.io/repository/github/jim60105/docker-whisperx) ![Docker Build](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/04-build-matrix-images.yml?label=Docker%20Build)
 
 This is the docker image for [WhisperX: Automatic Speech Recognition with Word-Level Timestamps (and Speaker Diarization)](https://github.com/m-bain/whisperX) from the community.
 
@@ -34,7 +34,7 @@ Install the NVIDIA Container Toolkit with this guide.
 
 ## 📦 Available Pre-built Image
 
-![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=Docker%20Build) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/jim60105/docker-whisperX/master?label=Date)
+![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/04-build-matrix-images.yml?label=Docker%20Build) ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/jim60105/docker-whisperX/master?label=Date)
 
 > [!NOTE]  
 > The WhisperX code base in these images aligns with the git submodule commit hash.  
@@ -49,7 +49,7 @@ docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:no_model    -- -
 The image tags are formatted as `WHISPER_MODEL`-`LANG`, for example, `tiny-en`, `base-de` or `large-v3-zh`.  
 Please be aware that the whisper models `*.en`,  `large-v1`, `large-v2` have been excluded as I believe they are not frequently used. If you require these models, please refer to the following section to build them on your own.
 
-You can find the actual build matrix in [docker_publish.yml](.github/workflows/docker_publish.yml#L212) and all available tags at [ghcr.io](https://github.com/jim60105/docker-whisperX/pkgs/container/whisperx/versions?filters%5Bversion_type%5D=tagged).
+You can find the actual build matrix in [04-build-matrix-images.yml](.github/workflows/04-build-matrix-images.yml) and all available tags at [ghcr.io](https://github.com/jim60105/docker-whisperX/pkgs/container/whisperx/versions?filters%5Bversion_type%5D=tagged).
 
 In addition, there is also a `no_model` tag that does not include any pre-downloaded models, also referred to as `latest`.
 
@@ -121,7 +121,7 @@ docker run --gpus all -it -v ".:/app" whisperx:large-v3-ja -- --output_format sr
 
 ## ⛑️ Red Hat UBI based Image
 
-![Docker Build](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/docker_publish.yml?label=Docker%20Build)
+![Docker Build](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/01-build-base-images.yml?label=Docker%20Build)
 
 I have created an alternative [ubi.Dockerfile](ubi.Dockerfile) that is based on the **Red Hat Universal Base Image (UBI)** image, unlike the default one which used the **Python official image** as the base image. If you are a Red Hat subscriber, I believe you will find its benefits.
 

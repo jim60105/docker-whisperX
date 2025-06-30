@@ -1,0 +1,78 @@
+# Build model cache workflow
+# This workflow builds the Whisper model cache images for all supported models
+name: "02-build-model-cache"
+
+on:
+  workflow_run:
+    workflows: ["01-build-base-images"]
+    types: [completed]
+
+# Sets the permissions granted to the GITHUB_TOKEN for the actions in this job.
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  # Download whisper model cache
+  docker-cache:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    strategy:
+      fail-fast: true
+      matrix:
+        model:
+          - tiny
+          - base
+          - small
+          - medium
+          - large-v3
+          - distil-large-v3
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup docker
+        id: setup
+        uses: ./.github/workflows/docker-reused-steps
+        with:
+          tag: cache-${{ matrix.model }}
+
+      - name: Get no_model digest from triggering workflow
+        id: get-base-digest
+        run: |
+          # Get the triggering workflow run information
+          WORKFLOW_RUN_ID="${{ github.event.workflow_run.id }}"
+          
+          # Get the no_model digest from the artifacts or outputs
+          # For now, we'll use the latest no_model image with the same commit SHA
+          COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          SHORT_SHA=$(echo $COMMIT_SHA | cut -c 1-7)
+          
+          # Use the no_model image with short SHA tag
+          NO_MODEL_IMAGE="ghcr.io/jim60105/whisperx:no_model-$SHORT_SHA"
+          echo "no_model_image=$NO_MODEL_IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Build cache:${{ matrix.model }}
+        uses: docker/build-push-action@v5
+        id: build
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          target: load_whisper
+          tags: ${{ steps.setup.outputs.tags }}
+          labels: ${{ steps.setup.outputs.labels }}
+          build-args: |
+            WHISPER_MODEL=${{ matrix.model }}
+            NO_MODEL_STAGE=${{ steps.get-base-digest.outputs.no_model_image }}
+            VERSION=${{ github.event.workflow_run.head_sha }}
+            RELEASE=${{ github.event.workflow_run.run_number }}
+          platforms: linux/amd64, linux/arm64
+          # Cache to registry instead of gha to avoid the capacity limit.
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
+          sbom: true
+          provenance: true
