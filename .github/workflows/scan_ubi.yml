@@ -2,7 +2,7 @@ name: scan
 
 on:
   workflow_run:
-    workflows: [docker_publish]
+    workflows: ["01-build-base-images"]
     types: [completed]
 
   # Allows you to run this workflow manually from the Actions tab
