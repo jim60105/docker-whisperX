@@ -14,15 +14,29 @@ permissions:
   id-token: write
   attestations: write
 
-jobs:
-  # Build the distil-large-v3-en model (distil model seems to support only English)
-  docker-distil-large-v3-en:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+env:
+  REGISTRY_IMAGE: ${{ github.repository_owner }}/whisperx
 
+jobs:
+  # Build distil-large-v3-en on multiple platforms in parallel
+  build_distil:
+    runs-on: ${{ matrix.runner }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          submodules: true
 
       - name: Setup docker
         id: setup
@@ -44,15 +58,14 @@ jobs:
           echo "no_model_image=$NO_MODEL_IMAGE" >> $GITHUB_OUTPUT
           echo "cache_image=$CACHE_IMAGE" >> $GITHUB_OUTPUT
 
-      - name: Build and push:distil-large-v3-en
-        uses: docker/build-push-action@v5
-        id: build_push_distil
+      - name: Build and push by digest (distil-large-v3-en)
+        uses: docker/build-push-action@v6
+        id: build
         with:
           context: .
           file: ./Dockerfile
           target: final
-          push: true
-          tags: ${{ steps.setup.outputs.tags }}
+          platforms: ${{ matrix.platform }}
           labels: ${{ steps.setup.outputs.labels }}
           build-args: |
             WHISPER_MODEL=distil-large-v3
@@ -61,15 +74,124 @@ jobs:
             NO_MODEL_STAGE=${{ steps.get-refs.outputs.no_model_image }}
             VERSION=${{ github.event.workflow_run.head_sha }}
             RELEASE=${{ github.event.workflow_run.run_number }}
-          platforms: linux/amd64, linux/arm64
-          # Cache to registry instead of gha to avoid the capacity limit.
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/whisperx:cache,mode=max
+          cache-from: |
+            type=registry,ref=ghcr.io/${{ env.REGISTRY_IMAGE }}:cache-distil
+          cache-to: |
+            type=registry,ref=ghcr.io/${{ env.REGISTRY_IMAGE }}:cache-distil,mode=max
+          outputs: |
+            type=image,name=ghcr.io/${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
           sbom: true
           provenance: true
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          platform="${{ matrix.platform }}"
+          platform_safe="${platform//\//-}"
+          echo "${digest#sha256:}" > "/tmp/digests/${platform_safe}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-distil-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Test distil-large-v3-en builds by pulling from registry
+  test_distil:
+    runs-on: ${{ matrix.runner }}
+    needs: build_distil
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          name: digests-distil-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }}
+          path: /tmp/digests
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Test pull distil-large-v3-en image
+        run: |
+          cd /tmp/digests
+          digest=$(cat linux-*)
+          echo "Testing pull of distil-large-v3-en for platform ${{ matrix.platform }}"
+          docker pull --platform ${{ matrix.platform }} ghcr.io/${{ env.REGISTRY_IMAGE }}@sha256:$digest
+          echo "Successfully pulled distil-large-v3-en image for ${{ matrix.platform }}"
+
+  # Merge all platform builds into manifest list
+  merge_distil:
+    runs-on: ubuntu-latest
+    needs: test_distil
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digests-distil-*
+          merge-multiple: true
+
+      - name: Setup docker
+        id: setup
+        uses: ./.github/workflows/docker-reused-steps
+        with:
+          tag: distil-large-v3-en
+
+      - name: Create GHCR manifest list
+        run: |
+          echo "Creating manifest list for distil-large-v3-en..."
+          cd /tmp/digests
+          echo "Files in /tmp/digests:"
+          ls -la
+          echo "Building digest references..."
+          digest_refs=""
+          for file in linux-*; do
+            if [[ -f "$file" ]]; then
+              digest=$(cat "$file")
+              echo "Processing $file with digest: $digest"
+              digest_refs+="ghcr.io/${{ env.REGISTRY_IMAGE }}@sha256:$digest "
+            fi
+          done
+          echo "Final digest references: $digest_refs"
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<<$DOCKER_METADATA_OUTPUT_JSON) \
+            $digest_refs
+
+      - name: Get final manifest digest
+        id: get_digest
+        run: |
+          # Get the digest of the manifest list we just created
+          IMAGE_TAG=$(jq -cr '.tags[0]' <<<$DOCKER_METADATA_OUTPUT_JSON)
+          DIGEST=$(docker buildx imagetools inspect "$IMAGE_TAG" --format "{{.Manifest.Digest}}")
+          echo "manifest_digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Attest GHCR image (distil-large-v3-en)
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: ghcr.io/${{ github.repository_owner }}/whisperx
-          subject-digest: ${{ steps.build_push_distil.outputs.digest }}
+          subject-digest: ${{ steps.get_digest.outputs.manifest_digest }}
