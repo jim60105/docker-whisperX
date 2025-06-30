@@ -75,8 +75,9 @@ ENV UV_PYTHON_DOWNLOADS=0
 # Install big dependencies separately for layer caching
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
     uv venv --system-site-packages /venv && \
-    uv pip install --no-deps \
-    "torch<2.4.0" \
+    uv pip install --no-deps --index "https://download.pytorch.org/whl/cu128" \
+    "torch==2.7.1+cu128" \
+    "torchaudio" \
     "pyannote.audio==3.3.2"
 
 # Install whisperX dependencies
