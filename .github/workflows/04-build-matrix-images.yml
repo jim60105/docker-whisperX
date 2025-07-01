@@ -17,14 +17,18 @@ permissions:
 env:
   REGISTRY_IMAGE: ${{ github.repository_owner }}/whisperx
 
+# The following languages are excluded because these transcribe model are too large to build on the GitHub Actions
+# https://github.com/jim60105/docker-whisperX/actions/runs/8405597972
+# - no
+# - nn
+
 jobs:
-  # Build matrix images in parallel across multiple platforms
-  build_matrix:
+  # Build matrix images for tiny and base models
+  build_matrix_1:
     runs-on: ${{ matrix.runner }}
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     strategy:
       fail-fast: false
-      # max-parallel: 20  # Limit parallel jobs to prevent overwhelming GitHub Actions
       matrix:
         lang:
           - en
@@ -55,10 +59,6 @@ jobs:
           - hi
           - ca
           - ml
-          # Disable these languages because this transcribe model is too large to build on the GitHub Actions
-          # https://github.com/jim60105/docker-whisperX/actions/runs/8405597972
-          # - no
-          # - nn
           - sk
           - sl
           - hr
@@ -71,6 +71,129 @@ jobs:
         model:
           - tiny
           - base
+        platform:
+          - linux/amd64
+          - linux/arm64
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup docker
+        id: setup
+        uses: ./.github/workflows/docker-reused-steps
+        with:
+          tag: ${{ matrix.model }}-${{ matrix.lang }}
+
+      - name: Get base image references
+        id: get-refs
+        run: |
+          # Get the commit SHA from the triggering workflow
+          COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          SHORT_SHA=$(echo $COMMIT_SHA | cut -c 1-7)
+          
+          # Set image references
+          NO_MODEL_IMAGE="ghcr.io/jim60105/whisperx:no_model-$SHORT_SHA"
+          CACHE_IMAGE="ghcr.io/jim60105/whisperx:cache-${{ matrix.model }}-$SHORT_SHA"
+          
+          echo "no_model_image=$NO_MODEL_IMAGE" >> $GITHUB_OUTPUT
+          echo "cache_image=$CACHE_IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Build and push by digest (${{ matrix.model }}-${{ matrix.lang }})
+        uses: docker/build-push-action@v6
+        id: build
+        with:
+          context: .
+          file: ./Dockerfile
+          target: final
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.setup.outputs.labels }}
+          build-args: |
+            WHISPER_MODEL=${{ matrix.model }}
+            LANG=${{ matrix.lang }}
+            LOAD_WHISPER_STAGE=${{ steps.get-refs.outputs.cache_image }}
+            NO_MODEL_STAGE=${{ steps.get-refs.outputs.no_model_image }}
+            VERSION=${{ github.event.workflow_run.head_sha }}
+            RELEASE=${{ github.event.workflow_run.run_number }}
+          cache-from: |
+            type=registry,ref=ghcr.io/${{ env.REGISTRY_IMAGE }}:cache-matrix-${{ matrix.model }}-${{ matrix.lang }}
+          cache-to: |
+            type=registry,ref=ghcr.io/${{ env.REGISTRY_IMAGE }}:cache-matrix-${{ matrix.model }}-${{ matrix.lang }},mode=max
+          outputs: |
+            type=image,name=ghcr.io/${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
+          sbom: true
+          provenance: true
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          platform="${{ matrix.platform }}"
+          platform_safe="${platform//\//-}"
+          echo "${digest#sha256:}" > "/tmp/digests/${platform_safe}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ matrix.model }}-${{ matrix.lang }}-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Build matrix images for small, medium and large-v3 models
+  build_matrix_2:
+    runs-on: ${{ matrix.runner }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        lang:
+          - en
+          - fr
+          - de
+          - es
+          - it
+          - ja
+          - zh
+          - nl
+          - uk
+          - pt
+          - ar
+          - cs
+          - ru
+          - pl
+          - hu
+          - fi
+          - fa
+          - el
+          - tr
+          - da
+          - he
+          - vi
+          - ko
+          - ur
+          - te
+          - hi
+          - ca
+          - ml
+          - sk
+          - sl
+          - hr
+          - ro
+          - eu
+          - gl
+          - ka
+          - lv
+          - tl
+        model:
           - small
           - medium
           - large-v3
@@ -154,7 +277,7 @@ jobs:
   # Test matrix images builds by pulling from registry (selective testing)
   test_matrix:
     runs-on: ${{ matrix.runner }}
-    needs: build_matrix
+    needs: [build_matrix_1, build_matrix_2]
     strategy:
       fail-fast: false
       matrix:
