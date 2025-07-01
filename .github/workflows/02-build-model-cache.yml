@@ -220,7 +220,12 @@ jobs:
           jq -cr '.tags[] | select(startswith("ghcr.io/"))' <<<$DOCKER_METADATA_OUTPUT_JSON
           IMAGE_TAG=$(jq -cr '.tags[] | select(startswith("ghcr.io/"))' <<<$DOCKER_METADATA_OUTPUT_JSON | head -n1)
           echo "Using tag for digest lookup: $IMAGE_TAG"
-          DIGEST=$(docker buildx imagetools inspect "$IMAGE_TAG" --format "{{.Manifest.Digest}}")
+          # Get the raw digest output and extract only the sha256 part
+          DIGEST_RAW=$(docker buildx imagetools inspect "$IMAGE_TAG" --format "{{.Manifest.Digest}}")
+          echo "Raw digest output: $DIGEST_RAW"
+          # Extract only the digest hash, removing any MediaType or other formatting
+          DIGEST=$(echo "$DIGEST_RAW" | grep -oE 'sha256:[a-f0-9]{64}' | head -n1)
+          echo "Extracted digest: $DIGEST"
           echo "manifest_digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Attest GHCR image (cache-${{ matrix.model }})
