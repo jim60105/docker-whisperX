@@ -147,6 +147,7 @@ COPY --chown=$UID:0 --chmod=775 --from=build /venv /venv
 
 ENV PATH="/venv/bin${PATH:+:${PATH}}"
 ENV PYTHONPATH="/venv/lib/python3.11/site-packages"
+ENV LD_LIBRARY_PATH="/venv/lib/python3.11/site-packages/nvidia/cudnn/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 # Test whisperX
 RUN python3 -c 'import whisperx;' && \
