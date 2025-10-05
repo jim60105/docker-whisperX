@@ -128,7 +128,8 @@ ARG UID
 RUN install -d -m 775 -o $UID -g 0 /licenses && \
     install -d -m 775 -o $UID -g 0 /root && \
     install -d -m 775 -o $UID -g 0 ${CACHE_HOME} && \
-    install -d -m 775 -o $UID -g 0 ${CONFIG_HOME}
+    install -d -m 775 -o $UID -g 0 ${CONFIG_HOME} && \
+    install -d -m 775 -o $UID -g 0 /nltk_data
 
 # ffmpeg
 COPY --from=ghcr.io/jim60105/static-ffmpeg-upx:8.0 /ffmpeg /usr/local/bin/
