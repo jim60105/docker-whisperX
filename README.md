@@ -29,7 +29,7 @@ Install the NVIDIA Container Toolkit with this guide.
 <https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html>
 
 > [!TIP]  
-> I also have a Chinese blog about this topic:  
+> I have a Chinese blog about this topic:  
 > [Podman GPU Configuration Notes for Fedora/RHEL](https://xn--jgy.tw/Container/configuring-gpu-in-linux-podman/)
 
 ## 📦 Available Pre-built Image
@@ -75,7 +75,7 @@ docker run --gpus all -it -v ".:/app" -v whisper_cache:/.cache ghcr.io/jim60105/
 
 The [Dockerfile](Dockerfile) builds the image contained models. It accepts two build arguments: `LANG` and `WHISPER_MODEL`.
 
-- `LANG`: The language to transcribe. The default is `en`. See [here](https://github.com/jim60105/docker-whisperX/blob/master/load_align_model.py) for supported languages.
+- `LANG`: The language to transcribe. The default is `en`. See [supported languages in load_align_model.py](https://github.com/jim60105/docker-whisperX/blob/master/load_align_model.py).
 - `WHISPER_MODEL`: The model name. The default is `base`. See [fast-whisper](https://huggingface.co/Systran) for supported models.
 
 In case of multiple language alignments needed, use space separated list of languages `"LANG=pl fr en"` when building the image. Also note that WhisperX is not doing well to handle multiple languages within the same audio file. Even if you do not provide the language parameter, it will still recognize the language (or fallback to en) and use it for choosing the alignment model. Alignment models are language specific. **This instruction is simply for embedding multiple alignment models into a docker image.**
