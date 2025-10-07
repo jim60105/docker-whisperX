@@ -423,9 +423,9 @@ jobs:
           subject-name: ghcr.io/${{ github.repository_owner }}/whisperx
           subject-digest: ${{ steps.get_digest.outputs.manifest_digest }}
 
-  # Comprehensive test for large-v3-zh after merge
-  test-large-v3-zh:
-    name: Test large-v3-zh docker image
+  # Comprehensive test for medium-zh after merge
+  test-medium-zh:
+    name: Test medium-zh docker image
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     needs: merge_matrix
@@ -457,10 +457,10 @@ jobs:
           SHORT_SHA=$(echo $COMMIT_SHA | cut -c 1-7)
           
           # Set image reference
-          IMAGE="ghcr.io/jim60105/whisperx:large-v3-zh-$SHORT_SHA"
+          IMAGE="ghcr.io/jim60105/whisperx:medium-zh-$SHORT_SHA"
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
 
-      - name: Test large-v3-zh docker image
+      - name: Test medium-zh docker image
         run: |
           docker run --group-add 0 -v ".:/app" ${{ steps.get-ref.outputs.image }} -- --device cpu --compute_type int8 --output_format srt .github/workflows/test/zh.webm;
           if [ ! -f zh.srt ]; then
