@@ -123,10 +123,6 @@ jobs:
             NO_MODEL_STAGE=${{ steps.get-refs.outputs.no_model_image }}
             VERSION=${{ github.event.workflow_run.head_sha }}
             RELEASE=${{ github.event.workflow_run.run_number }}
-          cache-from: |
-            type=registry,ref=ghcr.io/${{ env.REGISTRY_IMAGE }}:cache-matrix-${{ matrix.model }}-${{ matrix.lang }}
-          cache-to: |
-            type=registry,ref=ghcr.io/${{ env.REGISTRY_IMAGE }}:cache-matrix-${{ matrix.model }}-${{ matrix.lang }},mode=max
           outputs: |
             type=image,name=ghcr.io/${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
           sbom: true
@@ -249,10 +245,6 @@ jobs:
             NO_MODEL_STAGE=${{ steps.get-refs.outputs.no_model_image }}
             VERSION=${{ github.event.workflow_run.head_sha }}
             RELEASE=${{ github.event.workflow_run.run_number }}
-          cache-from: |
-            type=registry,ref=ghcr.io/${{ env.REGISTRY_IMAGE }}:cache-matrix-${{ matrix.model }}-${{ matrix.lang }}
-          cache-to: |
-            type=registry,ref=ghcr.io/${{ env.REGISTRY_IMAGE }}:cache-matrix-${{ matrix.model }}-${{ matrix.lang }},mode=max
           outputs: |
             type=image,name=ghcr.io/${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
           sbom: true
