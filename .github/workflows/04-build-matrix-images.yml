@@ -273,10 +273,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Only test a subset to save resources - focus on large-v3-zh for compatibility
+        # Only test a subset to save resources - focus on medium-zh for compatibility
         include:
           - lang: zh
-            model: large-v3
+            model: medium
             platform: linux/amd64
             runner: ubuntu-latest
           - lang: en
