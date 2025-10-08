@@ -82,10 +82,6 @@ In case of multiple language alignments needed, use space separated list of lang
 
 ### Build Command
 
-> [!NOTE]  
-> If you are using an earlier version of the docker client, it is necessary to [enable the BuildKit mode](https://docs.docker.com/build/buildkit/#getting-started) when building the image. This is because I used the `COPY --link` feature which enhances the build performance and was introduced in Buildx v0.8.  
-> With the Docker Engine 23.0 and Docker Desktop 4.19, Buildx has become the default build client. So you won't have to worry about this when using the latest version.
-
 For example, if you want to build the image with `en` language and `large-v3` model:
 
 ```bash
@@ -99,9 +95,6 @@ docker build --target no_model -t whisperx:no_model .
 ```
 
 If you want to build all images at once, we have [a Docker bake file](docker-bake.hcl) available:
-
-> [!WARNING]  
-> [Bake](https://docs.docker.com/build/bake/) is currently an experimental feature, and it may require additional configuration in order to function correctly.
 
 ```bash
 docker buildx bake build no_model ubi-no_model
