@@ -71,6 +71,7 @@ ENV UV_PROJECT_ENVIRONMENT=/venv
 ENV VIRTUAL_ENV=/venv
 ENV UV_LINK_MODE=copy
 ENV UV_PYTHON_DOWNLOADS=0
+ENV UV_PYTHON=3.11
 
 # Install big dependencies separately for layer caching
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
