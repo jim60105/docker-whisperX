@@ -16,16 +16,47 @@ jobs:
       OWNER: ${{ github.repository_owner }}
 
     steps:
-      - name: Checkout Code
+      - name: Checkout parent repository with submodules
         uses: actions/checkout@v5
-
-      - name: Update Submodules
-        uses: releasehub-com/github-action-create-pr-parent-submodule@v1
-        continue-on-error: true
         with:
-          github_token: ${{ secrets.CR_PAT }}
-          parent_repository: ${{ env.PARENT_REPOSITORY }}
-          checkout_branch: ${{ env.CHECKOUT_BRANCH}}
-          pr_against_branch: ${{ env.PR_AGAINST_BRANCH }}
-          owner: ${{ env.OWNER }}
-          label: "automerge"
+          token: ${{ secrets.CR_PAT }}
+          repository: ${{ env.PARENT_REPOSITORY }}
+          ref: ${{ env.CHECKOUT_BRANCH }}
+          submodules: true
+          fetch-depth: 0
+
+      - name: Update submodules and create branch
+        continue-on-error: true
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git submodule update --remote
+          BRANCH_NAME="submodule-update-${{ github.run_id }}"
+          git checkout -b $BRANCH_NAME
+          git commit -am "chore: update submodules to latest versions"
+          git push --set-upstream origin $BRANCH_NAME
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+      - name: Create pull request
+        continue-on-error: true
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.CR_PAT }}
+          script: |
+            const branchName = process.env.BRANCH_NAME;
+            const pr = await github.rest.pulls.create({
+              owner: '${{ env.OWNER }}',
+              repo: '${{ env.PARENT_REPOSITORY }}'.split('/')[1].trim(),
+              head: branchName,
+              base: '${{ env.PR_AGAINST_BRANCH }}',
+              title: `chore: update submodules (${branchName})`,
+              body: `This is an automated pull request to update submodules to their latest versions.\n\nTriggered by workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}`
+            });
+            
+            // Add label to the PR
+            await github.rest.issues.addLabels({
+              owner: '${{ env.OWNER }}',
+              repo: '${{ env.PARENT_REPOSITORY }}'.split('/')[1].trim(),
+              issue_number: pr.data.number,
+              labels: ['automerge']
+            });
