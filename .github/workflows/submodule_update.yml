@@ -26,11 +26,20 @@ jobs:
           fetch-depth: 0
 
       - name: Update submodules and create branch
-        continue-on-error: true
+        id: update
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git submodule update --remote
+          
+          # Check if there are any changes
+          if git diff --quiet; then
+            echo "No submodule updates available"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "has_changes=true" >> $GITHUB_OUTPUT
           BRANCH_NAME="submodule-update-${{ github.run_id }}"
           git checkout -b $BRANCH_NAME
           git commit -am "chore: update submodules to latest versions"
@@ -38,7 +47,7 @@ jobs:
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Create pull request
-        continue-on-error: true
+        if: steps.update.outputs.has_changes == 'true'
         uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.CR_PAT }}
