@@ -369,7 +369,7 @@ jobs:
           submodules: true
 
       - name: Download digests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: /tmp/digests
           pattern: digests-${{ matrix.model }}-${{ matrix.lang }}-*
@@ -418,7 +418,7 @@ jobs:
           echo "manifest_digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Attest GHCR image (${{ matrix.model }}-${{ matrix.lang }})
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v3
         with:
           subject-name: ghcr.io/${{ github.repository_owner }}/whisperx
           subject-digest: ${{ steps.get_digest.outputs.manifest_digest }}

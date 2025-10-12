@@ -22,7 +22,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Run Trivy vulnerability scanner for UBI image
-        uses: aquasecurity/trivy-action@0.16.1
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           image-ref: "ghcr.io/jim60105/whisperx:ubi-no_model"
           vuln-type: "os,library"

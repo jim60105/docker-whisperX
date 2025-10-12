@@ -137,7 +137,7 @@ jobs:
           submodules: true
 
       - name: Download digests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: digests-cache-${{ matrix.model }}-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }}
           path: /tmp/digests
@@ -180,7 +180,7 @@ jobs:
           submodules: true
 
       - name: Download digests
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: /tmp/digests
           pattern: digests-cache-${{ matrix.model }}-*
@@ -229,7 +229,7 @@ jobs:
           echo "manifest_digest=$DIGEST" >> $GITHUB_OUTPUT
 
       - name: Attest GHCR image (cache-${{ matrix.model }})
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v3
         with:
           subject-name: ghcr.io/${{ github.repository_owner }}/whisperx
           subject-digest: ${{ steps.get_digest.outputs.manifest_digest }}
