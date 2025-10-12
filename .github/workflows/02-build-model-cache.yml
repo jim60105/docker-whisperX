@@ -44,7 +44,7 @@ jobs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -132,7 +132,7 @@ jobs:
             runner: ubuntu-24.04-arm
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -175,7 +175,7 @@ jobs:
           - distil-large-v3
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: true
 

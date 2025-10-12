@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Update Submodules
         uses: releasehub-com/github-action-create-pr-parent-submodule@v1

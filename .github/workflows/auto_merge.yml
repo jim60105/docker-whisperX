@@ -9,7 +9,7 @@ jobs:
     if: github.actor == 'jim60105' && github.repository == 'jim60105/docker-whisperX'
     steps:
       - name: Auto approve
-        uses: hmarr/auto-approve-action@v3
+        uses: hmarr/auto-approve-action@v4
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
@@ -29,7 +29,7 @@ jobs:
 
       - name: Remove label
         if: ${{ success() }}
-        uses: buildsville/add-remove-label@v1
+        uses: buildsville/add-remove-label@v2.0.1
         with:
           token: ${{secrets.GITHUB_TOKEN}}
           label: "automerge"
