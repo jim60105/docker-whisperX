@@ -6,7 +6,7 @@ jobs:
   Auto_Approve:
     name: Auto Approve
     runs-on: ubuntu-latest
-    if: github.actor == 'jim60105' && github.repository == 'jim60105/docker-whisperX'
+    if: (github.actor == 'jim60105' || github.actor == 'bot0419') && github.repository == 'jim60105/docker-whisperX'
     steps:
       - name: Auto approve
         uses: hmarr/auto-approve-action@v4
