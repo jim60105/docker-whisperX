@@ -21,7 +21,7 @@ ARG HF_HOME=${CACHE_HOME}/huggingface
 ########################################
 # Base stage for amd64
 ########################################
-FROM docker.io/library/python:3.11-slim-bullseye AS prepare_base_amd64
+FROM docker.io/library/python:3.11-slim AS prepare_base_amd64
 
 # RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
 ARG TARGETARCH
@@ -35,7 +35,7 @@ ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 ########################################
 # Base stage for arm64
 ########################################
-FROM docker.io/library/python:3.11-slim-bullseye AS prepare_base_arm64
+FROM docker.io/library/python:3.11-slim AS prepare_base_arm64
 
 # RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
 ARG TARGETARCH
@@ -95,8 +95,8 @@ RUN pip3.11 uninstall -y pip wheel && \
 
 # Create user
 ARG UID
-RUN groupadd -g $UID $UID && \
-    useradd -l -u $UID -g $UID -m -s /bin/sh -N $UID
+RUN groupadd -g $UID whisperx && \
+    useradd -l -u $UID -g $UID -m -s /bin/sh -N whisperx
 
 ARG CACHE_HOME
 ARG CONFIG_HOME
@@ -112,10 +112,6 @@ RUN install -d -m 775 -o $UID -g 0 /licenses && \
     install -d -m 775 -o $UID -g 0 ${CONFIG_HOME} && \
     install -d -m 775 -o $UID -g 0 /nltk_data
 
-# ffmpeg
-COPY --link --from=ghcr.io/jim60105/static-ffmpeg-upx:8.0 /ffmpeg /usr/local/bin/
-# COPY --link --from=ghcr.io/jim60105/static-ffmpeg-upx:8.0 /ffprobe /usr/local/bin/
-
 # dumb-init
 COPY --link --from=ghcr.io/jim60105/static-ffmpeg-upx:8.0 /dumb-init /usr/local/bin/
 
@@ -123,13 +119,24 @@ COPY --link --from=ghcr.io/jim60105/static-ffmpeg-upx:8.0 /dumb-init /usr/local/
 COPY --link --chown=$UID:0 --chmod=775 LICENSE /licenses/LICENSE
 COPY --link --chown=$UID:0 --chmod=775 whisperX/LICENSE /licenses/whisperX.LICENSE
 
+# RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
+ARG TARGETARCH
+ARG TARGETVARIANT
+
+# ffmpeg (install via package manager to provide shared libraries for torchcodec)
+# https://github.com/jim60105/docker-whisperX/issues/98
+RUN --mount=type=cache,id=apt-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/apt \
+    --mount=type=cache,id=aptlists-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/lib/apt/lists \
+    apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg
+
 # Copy dependencies and code (and support arbitrary uid for OpenShift best practice)
 # https://docs.openshift.com/container-platform/4.14/openshift_images/create-images.html#use-uid_create-images
 COPY --link --chown=$UID:0 --chmod=775 --from=build /venv /venv
 
 ENV PATH="/venv/bin${PATH:+:${PATH}}"
 ENV PYTHONPATH="/venv/lib/python3.11/site-packages"
-ENV LD_LIBRARY_PATH="/venv/lib/python3.11/site-packages/nvidia/cudnn/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+ENV LD_LIBRARY_PATH="/lib/x86_64-linux-gnu:/lib/aarch64-linux-gnu:/venv/lib/python3.11/site-packages/nvidia/cudnn/lib:${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 # Test whisperX
 RUN python3 -c 'import whisperx;' && \
