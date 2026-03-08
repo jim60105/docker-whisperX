@@ -97,7 +97,7 @@ docker build --target no_model -t whisperx:no_model .
 If you want to build all images at once, we have [a Docker bake file](docker-bake.hcl) available:
 
 ```bash
-docker buildx bake build no_model ubi-no_model
+docker buildx bake build no_model
 ```
 
 ### Usage Command
@@ -111,31 +111,6 @@ docker run --gpus all -it -v ".:/app" whisperx:large-v3-ja -- --output_format sr
 > [!NOTE]  
 > Remember to prepend `--` before the arguments.  
 > `--model` and `--language` args are defined in Dockerfile, no need to specify.
-
-## ⛑️ Red Hat UBI based Image
-
-![Docker Build](https://img.shields.io/github/actions/workflow/status/jim60105/docker-whisperX/01-build-base-images.yml?label=Docker%20Build)
-
-I have created an alternative [ubi.Dockerfile](ubi.Dockerfile) that is based on the **Red Hat Universal Base Image (UBI)** image, unlike the default one which used the **Python official image** as the base image. If you are a Red Hat subscriber, I believe you will find its benefits.
-
-> [!TIP]
-> With the release of the Red Hat Universal Base Image (UBI), you can now take advantage of the greater reliability, security, and performance of official Red Hat container images where OCI-compliant Linux containers run - whether you're a customer or not. -- [Red Hat blog](https://www.redhat.com/en/blog/introducing-red-hat-universal-base-image)
-
-It is important to mention that it is *NOT* necessary obtaining a license from Red Hat to use UBI, however, if you are the subscriber and runs it on RHEL/OpenShift, you may get supports from Red Hat.
-
-Despite my initial hesitation, I made the decision not to utilize the *UBI* version as the default image. The *Python official image* has a significantly larger user base compared to *UBI*, and I believe that opting for it aligns better with public expectations. Nevertheless, I would still suggest giving the *UBI* version a try.
-
-Please refer to [the latest vulnerability scan report](https://github.com/jim60105/docker-whisperX/actions/workflows/scan.yml?query=is%3Asuccess) from our scanning workflow artifact. You can see that the *UBI* version has fewer vulnerabilities compared to the *Python official image* version.
-
-You can get the pre-built image at tag `ubi-no_model`. Notice that only `no_model` is available. Feel free to build your own image with the [ubi.Dockerfile](ubi.Dockerfile) for your needs. This Dockerfile supports the same build arguments as the default one.
-
-```bash
-docker run --gpus all -it -v ".:/app" ghcr.io/jim60105/whisperx:ubi-no_model -- --model tiny --language en --output_format srt audio.mp3
-```
-
-> [!WARNING]
-> ***DISCLAIMER***:  
-> I have created the image in accordance with the specifications outlined in the [Red Hat Container Certification Requirement](https://access.redhat.com/documentation/en-us/red_hat_software_certification/8.72/html/red_hat_openshift_software_certification_policy_guide/assembly-requirements-for-container-images_openshift-sw-cert-policy-introduction) but I am not going to pursue the actual [certification](https://connect.redhat.com/en/partner-with-us/red-hat-container-certification).
 
 ## 📝 LICENSE
 

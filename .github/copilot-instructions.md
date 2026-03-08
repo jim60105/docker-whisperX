@@ -75,7 +75,6 @@ The focus of this project is on the Dockerfile and CI workflow, not on the Whisp
 ```
 docker-whisperX/
 ├── Dockerfile              # Main Docker build configuration (For docker compatibility)
-├── ubi.Dockerfile          # Red Hat UBI-based alternative (For podman compatibility)
 ├── docker-bake.hcl         # Docker Buildx bake configuration for matrix builds
 ├── load_align_model.py     # Preloads alignment models for supported languages
 ├── whisperX/               # Git submodule containing WhisperX source code
@@ -93,7 +92,6 @@ docker-whisperX/
 - Apply **layer caching strategies** to optimize CI build times
 - Use **ARG** variables for build-time configuration (WHISPER_MODEL, LANG, etc.)
 - Follow **security best practices**: run as non-root user, minimize installed packages
-- Do not use `--link` in ubi.Dockerfile, as it is not supported by Podman.
 - Do not use `,z` or `,Z` in Dockerfile, as it is not supported by Docker buildx.
 
 ### Documentation Standards
