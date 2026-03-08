@@ -69,6 +69,7 @@ FROM base AS build
 # RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
 ARG TARGETARCH
 ARG TARGETVARIANT
+ENV TARGETARCH=${TARGETARCH}
 
 WORKDIR /app
 
@@ -90,7 +91,17 @@ RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/ro
 # Install whisperX project
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
     --mount=source=whisperX,target=.,rw \
-    uv sync --frozen --no-dev --no-editable
+    uv sync --frozen --no-dev --no-editable && \
+    # pyannote-audio 4.0.4 need torchcodec 0.10.0;
+    # torchcodec 0.10.0 need torch 2.10.0;
+    # torch 2.XX+cu128 need torchcodec 0.XX.0+cu128;
+    # The last time I submitted PR #1182 to update torch-related packages, it took three months and was really tiring. I think I'll just resolve the issue here this time.
+    # Anyone who notices this line please feel free to submit it upstream.
+    [ "$TARGETARCH" = "amd64" ] && \
+    uv pip install --reinstall --torch-backend=cu128 \
+    torch==2.10.0+cu128 \
+    torchaudio==2.10.0+cu128 \
+    torchcodec==0.10.0+cu128 
 
 ########################################
 # Final stage for no_model
@@ -144,7 +155,7 @@ COPY --link --chown=$UID:0 --chmod=775 --from=build /venv /venv
 
 ENV PATH="/venv/bin${PATH:+:${PATH}}"
 ENV PYTHONPATH="/venv/lib/python3.11/site-packages"
-ENV LD_LIBRARY_PATH="/lib/x86_64-linux-gnu:/lib/aarch64-linux-gnu:/venv/lib/python3.11/site-packages/nvidia/cudnn/lib:${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+ENV LD_LIBRARY_PATH="/lib/x86_64-linux-gnu:/lib/aarch64-linux-gnu:/venv/lib/python3.11/site-packages/nvidia/cudnn/lib:/venv/lib/python3.11/site-packages/torch/lib:${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 # Test whisperX
 RUN python3 -c 'import whisperx;' && \
