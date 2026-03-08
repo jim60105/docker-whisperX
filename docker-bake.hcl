@@ -1,5 +1,5 @@
 group "default" {
-  targets = ["no_model", "ubi-no_model", "build"]
+  targets = ["no_model", "build"]
 }
 
 variable "WHISPER_MODEL" {
@@ -84,17 +84,6 @@ target "no_model" {
   tags = [
     "ghcr.io/jim60105/whisperx:latest",
     "ghcr.io/jim60105/whisperx:no_model"
-  ]
-  platforms  = ["linux/amd64", "linux/arm64"]
-  cache-from = ["type=local,mode=max,src=cache"]
-  cache-to   = ["type=local,mode=max,dest=cache"]
-}
-
-target "ubi-no_model" {
-  dockerfile = "ubi.Dockerfile"
-  target     = "no_model"
-  tags = [
-    "ghcr.io/jim60105/whisperx:ubi-no_model"
   ]
   platforms  = ["linux/amd64", "linux/arm64"]
   cache-from = ["type=local,mode=max,src=cache"]

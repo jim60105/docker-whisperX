@@ -3,7 +3,7 @@
 
 # Main workflow trigger that initiates the Docker image build chain
 # This workflow has been refactored to trigger a sequence of specialized workflows:
-# 1. 01-build-base-images.yml - Builds ubi-no_model and no_model base images
+# 1. 01-build-base-images.yml - Builds no_model base images
 # 2. 02-build-model-cache.yml - Builds model cache images (6 models)
 # 3. 03-build-distil-en.yml + 04-build-matrix-images.yml - Parallel builds of final images
 name: docker_publish
@@ -45,7 +45,7 @@ jobs:
           echo "Run number: ${{ github.run_number }}"
           echo ""
           echo "This workflow will trigger the following sequence:"
-          echo "1. 01-build-base-images.yml - Base images (ubi-no_model, no_model)"
+          echo "1. 01-build-base-images.yml - Base images (no_model)"
           echo "2. 02-build-model-cache.yml - Model cache images (6 models)"
           echo "3. 03-build-distil-en.yml - Distil English model (parallel)"
           echo "4. 04-build-matrix-images.yml - Full matrix build + tests (parallel)"
