@@ -15,14 +15,14 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           sparse-checkout: |
             .github/workflows/scan/html.tpl
           sparse-checkout-cone-mode: false
 
       - name: Run Trivy vulnerability scanner for Python official image
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: "ghcr.io/jim60105/whisperx:no_model"
           vuln-type: "os,library"
@@ -35,7 +35,7 @@ jobs:
           output: "trivy-results.html"
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: trivy-results
