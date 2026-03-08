@@ -97,11 +97,12 @@ RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/ro
     # torch 2.XX+cu128 need torchcodec 0.XX.0+cu128;
     # The last time I submitted PR #1182 to update torch-related packages, it took three months and was really tiring. I think I'll just resolve the issue here this time.
     # Anyone who notices this line please feel free to submit it upstream.
-    [ "$TARGETARCH" = "amd64" ] && \
+    if [ "$TARGETARCH" = "amd64" ]; then \
     uv pip install --reinstall --torch-backend=cu128 \
     torch==2.10.0+cu128 \
     torchaudio==2.10.0+cu128 \
-    torchcodec==0.10.0+cu128 
+    torchcodec==0.10.0+cu128; \
+    fi
 
 ########################################
 # Final stage for no_model
