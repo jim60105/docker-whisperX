@@ -82,6 +82,23 @@ ENV UV_LINK_MODE=copy
 ENV UV_PYTHON_DOWNLOADS=0
 ENV UV_PYTHON=3.11
 
+# Install curl
+RUN --mount=type=cache,id=apt-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/apt \
+    --mount=type=cache,id=aptlists-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/lib/apt/lists \
+    apt-get update && apt-get install -y --no-install-recommends \
+    curl
+
+# Get Dumb Init
+# Map Docker TARGETARCH to dumb-init naming convention
+# TARGETARCH: amd64 -> x86_64, arm64 -> aarch64
+RUN case "${TARGETARCH}" in \
+      amd64) DUMBINIT_ARCH="x86_64" ;; \
+      arm64) DUMBINIT_ARCH="aarch64" ;; \
+      *) echo "unsupported architecture: ${TARGETARCH}" && exit 1 ;; \
+    esac && \
+    curl -fsSL "https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_${DUMBINIT_ARCH}" \
+    -o /usr/local/bin/dumb-init
+
 # Install whisperX dependencies
 RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/root/.cache/uv \
     --mount=type=bind,source=whisperX/pyproject.toml,target=pyproject.toml \
@@ -132,18 +149,8 @@ RUN install -d -m 775 -o $UID -g 0 /licenses && \
     install -d -m 775 -o $UID -g 0 ${CONFIG_HOME} && \
     install -d -m 775 -o $UID -g 0 /nltk_data
 
-# Get Dumb Init
-# Map Docker TARGETARCH to dumb-init naming convention
-# TARGETARCH: amd64 -> x86_64, arm64 -> aarch64
-RUN case "${TARGETARCH}" in \
-      amd64) DUMBINIT_ARCH="x86_64" ;; \
-      arm64) DUMBINIT_ARCH="aarch64" ;; \
-      *) echo "unsupported architecture: ${TARGETARCH}" && exit 1 ;; \
-    esac && \
-    curl -fsSL "https://github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_${DUMBINIT_ARCH}" \
-    -o /usr/local/bin/dumb-init && \
-    chmod 755 /usr/local/bin/dumb-init && \
-    chown $UID:0 /usr/local/bin/dumb-init
+# Copy dumb-init
+COPY --link --chown=$UID:0 --chmod=775 --from=build /usr/local/bin/dumb-init /usr/local/bin/dumb-init
 
 # Copy licenses (OpenShift Policy)
 COPY --link --chown=$UID:0 --chmod=775 LICENSE /licenses/LICENSE
