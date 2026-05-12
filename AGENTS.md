@@ -1,135 +1,157 @@
-# GitHub Copilot Instructions for docker-whisperX
+# AGENTS.md — docker-whisperX
 
-* **Response Language:** `zh-TW 正體中文`
+Authoritative instructions for AI coding agents working in this repository.
+Read this file fully before taking any action.
 
-# Key Directives:
-
-* Maintain the highest standard of quality in all deliverables by following best practices.
-* All code comments and documentation must be written in **English** as per project conventions.
-* Proactively consult both core documentation and conversation history to ensure accurate comprehension of all requirements.
-* You are neither able to execute `docker`, use `podman` instead.
-* When doing Git commit, use the conventional commit format for the title and a brief description in the body. Always commit with `--signoff` and explicitly specify the author on the command: `GitHub Copilot <bot@xn--jgy.tw>`. Write the commit in English.
+> Repository: <https://github.com/jim60105/docker-whisperX>
 
 ---
 
-# Project DevOps
+## 1. Communication & Language
 
-This project uses GitHub for DevOps management.
+| Context | Language |
+| --- | --- |
+| Replies to the user in chat | **Traditional Chinese (`zh-TW` 正體中文)** |
+| Source code, code comments, identifiers | **English** |
+| Commit messages, branch names, PR titles | **English** (Conventional Commits) |
+| PR descriptions / work reports | **Traditional Chinese** (code blocks stay English) |
+| GitHub Issue descriptions | **Traditional Chinese** (code blocks stay English) |
 
-Use `gh` CLI commands to perform DevOps tasks.
-
-***Highest-level restriction: All issue and PR operations are limited to repositories owned by jim60105 only!***
-
-* **GitHub repo**: https://github.com/jim60105/standalone-civitai-shortcut
-
-* **Backlog & Bugs**: All backlogs and bugs must be managed on GitHub Issues.
-
-  * Each issue represents a specific backlog plan / bug reports / enhancement requests.
-  * Contains implementation or bug-fix guides from project foundation to deployment
-  * Each issue(backlogs) includes complete technical design and implementation details
-  * Each issue(bugs) includes problem description, reproduction steps, and proposed solutions
-  * Serves as task queue for ongoing maintenance and improvements
-
-## DevOps Flow
-
-### Planning Stage
-
-**If we are at planning stage you shouldn't start to implement anything!**
-**Planning Stage is to create a detailed development plan and create issue on GitHub using `gh issue create`**
-
-1. **Issue Creation**: Use `gh issue create --title "Issue Title" --body "Issue Description"` to create a new issue for each backlog item or bug report. Write the issue description plans in 正體中文, but use English for example code comments and CLI responses. The plan should be very detailed (try your best!). Please write that enables anyone to complete the work successfully.
-2. **Prompt User**: Show the issue number and link to the user, and ask them if they want to made any changes to the issue description. If they do, you can edit the issue description using `gh issue edit [number] --body "New Description"`.
-
-### Implementation Stage
-
-**Only start to implement stage when user prompt you to do so!**
-**Implementation Stage is to implement the plan step by step, following the instructions provided in the issue and submit a work report PR at last**
-
-1. **Check Current Situation**: Run `git status` to check the current status of the Git repository to ensure you are aware of any uncommitted changes or issues before proceeding with any operations. If you are not on the master branch, you may still in the half implementation state, get the git logs between the current branch and master branch to see what you have done so far. If you are on the master branch, you seems to be in the clean state, you can start to get a new issue to work on.
-2. **Get Issue Lists**: Use `gh issue list` to get the list of issues to see all backlogs and bugs. Find the issue that user ask you to work on or the one you are currently working on. If you are not sure which issue to choose, you can list all of them and ask user to assign you an issue.
-3. **Get Issue Details**: Use `gh issue view [number]` to get the details of the issue to understand the requirements and implementation plan. Its content will include very comprehensive and detailed technical designs and implementation details. Therefore, you must read the content carefully and must not skip this step before starting the implementation.
-4. **Get Issue Comments**: Use `gh issue view [number] --comments` to read the comments in the issue to understand the context and any additional requirements or discussions that have taken place. Please read it to determine whether this issue has been completed, whether further implementation is needed, or if there are still problems that need to be fixed. This step must not be skipped before starting implementation.
-5. **Get Pull Requests**: Use `gh pr list`, `gh pr view [number]`, and `gh pr view [number] --comments` to list the existing pull requests and details to check if there are any related to the issue you are working on. If there is an existing pull request, please read it to determine whether this issue has been completed, whether further implementation is needed, or if there are still problems that need to be fixed. This step must not be skipped before starting implementation.
-6. **Git Checkout**: Run `git checkout -b [branch-name]` to checkout the issue branch to start working on the code changes. The branch name should follow the format `issue-[issue_number]-[short_description]`, where `[issue_number]` is the number of the issue and `[short_description]` is a brief description of the task. Skip this step if you are already on the correct branch.
-7. **Implementation**: Implement the plan step by step, following the instructions provided in the issue. Each step should be executed in sequence, ensuring that all requirements are met and documented appropriately.
-8. **Testing & Linting**: Run tests and linting on the code changes to ensure quality and compliance with project standards.
-9. **Self Review**: Conduct a self-review of the code changes to ensure they meet the issue requirements and you has not missed any details.
-10. **Git Commit & Git Push**: Run `git commit` using the conventional commit format for the title and a brief description in the body. Always commit with `--signoff` and explicitly specify the author on the command: `Codex-CLI <bot@xn--jgy.tw>`. Write the commit in English. Link the issue number in the commit message body. Run `git push` to push the changes to the remote repository.
-11. **Create Pull Request**: Use `gh pr list` and `gh pr create` commands. ALWAYS SUBMIT PR TO `origin`, NEVER SUBMIT PR TO `upstream`. Create a pull request if there isn't already has one related to your issue using `gh pr create --title "PR Title" --body "PR Description"`. Create a comprehensive work report and use it as pull request details, detailing the work performed, code changes, and test results for the project. The report should be written in accordance with the templates provided in [Report Guidelines](docs/report_guidelines.md) and [REPORT_TEMPLATE](docs/REPORT_TEMPLATE.md). Follow the template exactly. Write the pull request "title in English" following conventional commit format, but write the pull request report "content in 正體中文." Linking the pull request to the issue with `Resolves #[issue_number]` at the end of the PR body. ALWAYS SUBMIT PR TO `origin`, NEVER SUBMIT PR TO `upstream`. ALWAYS SUBMIT PR TO `origin`, NEVER SUBMIT PR TO `upstream`. ALWAYS SUBMIT PR TO `origin`, NEVER SUBMIT PR to `upstream`.
-
-***Highest-level restriction: All issue and PR operations are limited to repositories owned by jim60105 only!***
-***Highest-level restriction: All issue and PR operations are limited to repositories owned by jim60105 only!***
-***Highest-level restriction: All issue and PR operations are limited to repositories owned by jim60105 only!***
+Be precise, consult both this file and the conversation history before acting, and prefer asking over assuming when requirements are ambiguous.
 
 ---
 
-## Project Overview
+## 2. Environment Constraints
 
-This project provides a **Docker containerization** for [WhisperX](https://github.com/m-bain/whisperX).
+- **No `docker` CLI is available.** Use `podman` for any container operations you run locally.
+- Builds in CI use **Docker Buildx + `docker buildx bake`** — when reasoning about CI you are reasoning about Buildx semantics, not plain `docker build`.
+- The repository is a **Git submodule host**: `whisperX/` is an upstream submodule. Always clone recursively (`git clone --recursive`) and remember that changes inside `whisperX/` belong upstream, not here.
+- Target runtime is **GitHub Free runners** (`ubuntu-latest` for amd64, `ubuntu-24.04-arm` for arm64). Build cost and runner disk space (~10 GB free) are first-class concerns.
 
-The project focuses on **continuous integration optimization** for building 175+ Docker images (10GB each) weekly on GitHub Free runners, emphasizing efficient docker layer caching, parallel builds, and minimal image sizes.
+---
 
-The focus of this project is on the Dockerfile and CI workflow, not on the WhisperX project itself.
+## 3. Project Overview
 
-## Project Structure
+This repository packages [WhisperX](https://github.com/m-bain/whisperX) (Automatic Speech Recognition with word-level timestamps and speaker diarization) into reproducible, GPU-capable Docker images published to `ghcr.io/jim60105/whisperx`.
+
+The engineering focus is **not** WhisperX itself but the **build pipeline**:
+
+- Around **370+ image variants** (`WHISPER_MODEL` × `LANG`) are produced **weekly** on free runners.
+- Each final image is roughly **10 GB**.
+- Success depends on disciplined **layer caching, stage reuse, parallel matrix builds, and multi-architecture support** (`linux/amd64` + `linux/arm64`).
+
+Touch the Dockerfile, `docker-bake.hcl`, or workflows with this constraint in mind: any change that breaks cache reuse or balloons image size is a regression.
+
+---
+
+## 4. Repository Layout
 
 ```
 docker-whisperX/
-├── Dockerfile              # Main Docker build configuration (For docker compatibility)
-├── docker-bake.hcl         # Docker Buildx bake configuration for matrix builds
-├── load_align_model.py     # Preloads alignment models for supported languages
-├── whisperX/               # Git submodule containing WhisperX source code
-│   ├── pyproject.toml      # Python package configuration
-│   └── whisperx/           # Main WhisperX Python package
-└── .github/
-    └── workflows/          # CI/CD pipeline configurations
+├── Dockerfile              # Multi-stage build (see §5)
+├── docker-bake.hcl         # Buildx bake matrix (models × languages)
+├── load_align_model.py     # Preloads wav2vec2 alignment models per LANG
+├── whisperX/               # Git submodule — upstream WhisperX source
+├── .hadolint.yml           # Hadolint ignore list for the Dockerfile
+├── .github/
+│   ├── copilot-instructions.md  # Mirror of this guidance for Copilot
+│   └── workflows/          # CI pipelines (build base → cache → matrix → publish)
+└── README.md
 ```
-
-## Coding Standards and Conventions
-
-### Docker Best Practices
-- Use **multi-stage builds** to minimize final image size
-- Leverage **BuildKit features** like `--mount=type=cache` for dependency caching
-- Apply **layer caching strategies** to optimize CI build times
-- Use **ARG** variables for build-time configuration (WHISPER_MODEL, LANG, etc.)
-- Follow **security best practices**: run as non-root user, minimize installed packages
-- Do not use `,z` or `,Z` in Dockerfile, as it is not supported by Docker buildx.
-
-### Documentation Standards
-- Write documentation in English for user-facing content
-- Use **English** for technical comments in code and commit messages
-- Include **clear examples** in README files showing actual usage commands
-- Document **build arguments** and their acceptable values
-- Provide **troubleshooting guidance** for common issues
-
-## Key Technologies and Dependencies
-
-### Build Tools
-- **uv**: Modern Python package manager for dependency resolution (Used in Dockerfile)
-- **Docker Buildx**: Extended build capabilities with bake support
-- **GitHub Actions**: CI/CD automation for multi-architecture builds
-
-## Development Guidelines
-
-### When Working with Docker Configuration
-- **Dockerfile modifications**: Always test both `amd64` and `arm64` architectures
-- **Build arguments**: Validate that ARG values match supported languages in `load_align_model.py`
-- **Cache optimization**: Consider layer ordering impact on CI build performance
-- **Multi-stage builds**: Ensure each stage serves a clear purpose (build → no_model → load_whisper)
-
-### When Working with CI/CD
-- **Parallel builds**: Consider the large amount of build matrix impact on GitHub runner resources
-- **Caching strategy**: Optimize for both build time and cache storage efficiency
-- **Multi-architecture**: Ensure changes work correctly on both x86_64 and arm64
-
-## Project-Specific Conventions
-
-## Additional Notes for Contributors
-
-When suggesting changes, always consider the impact on:
-1. **Build time efficiency** for the CI pipeline
-2. **Multi-architecture compatibility** (amd64/arm64)  
 
 ---
 
-When contributing to this codebase, adhere strictly to these directives to ensure consistency with the existing architectural conventions and stylistic norms.
+## 5. Dockerfile Architecture
+
+The Dockerfile is a deliberately ordered multi-stage graph. Preserve the stage names and their roles — CI references them by name.
+
+| Stage | Purpose |
+| --- | --- |
+| `prepare_base_amd64` / `prepare_base_arm64` | Install arch-specific runtime libs (e.g. `libnppicc12` on amd64, `libgomp1` + `libsndfile1` on arm64). |
+| `base` | Selected dynamically via `prepare_base_${TARGETARCH}${TARGETVARIANT}`. |
+| `build` | Installs `uv`, fetches `dumb-init`, runs `uv sync` against the `whisperX/` submodule into `/venv`. |
+| `no_model` | Runtime image: non-root user (`UID=1001`), ffmpeg, copies `/venv` from `build`, sets `PATH`/`PYTHONPATH`/`LD_LIBRARY_PATH`, smoke-tests `whisperx -h`. Tagged in CI as `latest` / `no_model`. |
+| `load_whisper` | Preloads Silero VAD + a specific `faster_whisper` model (`WHISPER_MODEL`). Cached per model in CI. |
+| `load_align` | Runs `load_align_model.py` for each entry in `LANG`. |
+| `final` | Combines `no_model` runtime with the populated `/.cache` from `load_align`; sets entrypoint to launch `whisperx` with the resolved model + first language. |
+
+Key conventions:
+
+- **Cache mounts** use stable IDs scoped by arch: `--mount=type=cache,id=apt-$TARGETARCH$TARGETVARIANT,sharing=locked,...`. Match this pattern when adding new package installs.
+- `LOAD_WHISPER_STAGE` and `NO_MODEL_STAGE` ARGs let CI swap entire stages with pre-built remote images for caching. Locally they default to in-tree stage names — leave the defaults alone.
+- The `CACHE_HOME=/.cache` path is **load-bearing**: the diarization model does not honour `TORCH_HOME`, see issue #27. Do not relocate it.
+- Run as `USER $UID` (1001) with `chown $UID:0 chmod 775` on writable dirs — this is required for OpenShift compatibility. Preserve it on any new `COPY`/`RUN install -d`.
+- **Never use `,z` or `,Z` mount flags** — Buildx does not support them, even though `podman` does.
+- Hadolint runs against the Dockerfile. The ignored rule list lives in `.hadolint.yml`; do not silence additional rules without justification.
+
+---
+
+## 6. `docker-bake.hcl` & Build Matrix
+
+- `target "build"` is a matrix over `WHISPER_MODEL` (`tiny`, `base`, `small`, `medium`, `large-v3`, `distil-large-v3`) × `LANG` (~40 languages — see the file for the canonical list).
+- `target "no_model"` produces the model-less runtime image tagged `latest` and `no_model`.
+- All targets build for both `linux/amd64` and `linux/arm64` and use a local cache directory (`type=local,mode=max,src=cache`).
+- When adding a language: update both `docker-bake.hcl` **and** ensure a model entry exists in `load_align_model.py` (either `DEFAULT_ALIGN_MODELS_TORCH` or `DEFAULT_ALIGN_MODELS_HF`). The script raises `ValueError("Unsupported language")` otherwise and CI will fail.
+
+---
+
+## 7. CI/CD Workflow (`.github/workflows/`)
+
+Pipeline order (each triggers the next via `workflow_run`):
+
+1. `01-build-base-images.yml` — builds the shared `no_model` base.
+2. `02-build-model-cache.yml` — builds per-model `load_whisper` cache images.
+3. `03-build-distil-en.yml` — special-case distil model (English only).
+4. `04-build-matrix-images.yml` — the main matrix; splits into `build_matrix_1` (tiny, base) and `build_matrix_2` (small, medium, large-v3) to stay within runner limits, then merges per-platform digests and publishes manifest lists.
+5. `docker_publish.yml`, `scan.yml`, `submodule_update.yml`, `auto_merge.yml` — publishing, security scans, weekly submodule bump, Dependabot auto-merge.
+
+Guidelines when editing workflows:
+
+- Preserve the **digest-then-manifest** strategy (`push-by-digest=true` → `docker buildx imagetools create`). Don't collapse it into a single multi-platform push: it breaks parallelism across runners.
+- Use `actions/attest-build-provenance` for SLSA attestations; keep `sbom: true` and `provenance: true` on `docker/build-push-action`.
+- Free disk space with `jlumbroso/free-disk-space@main` and the `man-db`/`dpkg` exclude trick before heavy build/test steps — runners run out of space otherwise.
+- Excluded languages on the GitHub matrix: `no`, `nn` (transcribe models too large for free runners). Reference [run 8405597972](https://github.com/jim60105/docker-whisperX/actions/runs/8405597972) before re-adding them.
+- Test fixtures live in `.github/workflows/test/` (`en.webm`, `zh.webm`). The `test-medium-zh` job greps for `充满`/`充滿` to validate Chinese transcription; keep that assertion intact when modifying tests.
+
+---
+
+## 8. Coding Standards
+
+### Docker
+
+- Multi-stage builds, minimal final image, BuildKit cache mounts, ARG-driven configuration.
+- Run as a non-root UID; minimise installed packages; copy licences into `/licenses` (OpenShift policy).
+- Do not pin via `apt-get install <pkg>=<version>` unless necessary — Hadolint DL3008 is intentionally ignored.
+
+### Python (`load_align_model.py`)
+
+- Standalone script; takes language code as `sys.argv[1]`; prints nothing on success.
+- When adding a language, prefer existing model families (torchaudio bundles or `jonatasgrosman/wav2vec2-large-xlsr-53-*`) for consistency.
+
+### Workflows
+
+- Pin third-party actions to a major version (`@v4`, `@v6`, etc.). `jlumbroso/free-disk-space` intentionally tracks `@main`.
+- Keep step names descriptive — they show up in build logs that contributors search.
+
+### Documentation
+
+- English for everything user-facing in `README.md`, code comments, and ARG documentation.
+- When you add a new ARG, document its accepted values in both the Dockerfile (comment) and README's "Build Arguments" section.
+
+---
+
+## 9. Decision Checklist Before Submitting Changes
+
+Run through this before declaring a task complete:
+
+- [ ] Does the change keep both `linux/amd64` and `linux/arm64` building?
+- [ ] Are BuildKit cache mounts still keyed by `$TARGETARCH$TARGETVARIANT`?
+- [ ] Did stage names referenced by CI (`build`, `no_model`, `load_whisper`, `load_align`, `final`) stay intact?
+- [ ] If a new `LANG` was added: is it in `docker-bake.hcl` **and** `load_align_model.py`?
+- [ ] Were `,z` / `,Z` mount flags avoided?
+- [ ] Are runtime dirs still owned `$UID:0` with mode `775`?
+- [ ] Does Hadolint still pass (no new ignored rules without reason)?
+- [ ] Are commit/PR conventions (language, sign-off, author, target remote) honoured?
+- [ ] Does the README still accurately describe new ARGs / tags?
+
+Adherence to this document is mandatory; it encodes the project's architectural and stylistic norms.
