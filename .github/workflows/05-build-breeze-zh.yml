@@ -1,10 +1,13 @@
-# Build model cache workflow
-# This workflow builds the Whisper model cache images for all supported models
-name: "02-build-model-cache"
+# Build breeze-asr-26-zh workflow
+# This workflow builds the paulpengtw/faster-whisper-Breeze-ASR-26 specialized
+# Chinese (zh) image. The full HuggingFace model id contains characters that
+# are illegal in Docker tags, so a short alias (`breeze-asr-26`) is used for
+# tagging while the original id is passed to `WHISPER_MODEL`.
+name: "05-build-breeze-zh"
 
 on:
   workflow_run:
-    workflows: ["01-build-base-images"]
+    workflows: ["02-build-model-cache"]
     types: [completed]
 
 # Sets the permissions granted to the GITHUB_TOKEN for the actions in this job.
@@ -16,26 +19,19 @@ permissions:
 
 env:
   REGISTRY_IMAGE: ${{ github.repository_owner }}/whisperx
+  # Tag-safe alias for `paulpengtw/faster-whisper-Breeze-ASR-26`.
+  MODEL_ALIAS: breeze-asr-26
+  WHISPER_MODEL_ID: paulpengtw/faster-whisper-Breeze-ASR-26
+  LANG_CODE: zh
 
 jobs:
-  # Build model cache in parallel across multiple platforms
-  build_cache:
+  # Build breeze-asr-26-zh on multiple platforms in parallel
+  build_breeze:
     runs-on: ${{ matrix.runner }}
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     strategy:
       fail-fast: false
       matrix:
-        model:
-          - tiny
-          - base
-          - small
-          - medium
-          - large-v3
-          - distil-large-v3
-          - breeze-asr-26
-        platform:
-          - linux/amd64
-          - linux/arm64
         include:
           - platform: linux/amd64
             runner: ubuntu-latest
@@ -53,53 +49,38 @@ jobs:
         id: setup
         uses: ./.github/workflows/docker-reused-steps
         with:
-          tag: cache-${{ matrix.model }}
+          tag: ${{ env.MODEL_ALIAS }}-${{ env.LANG_CODE }}
 
-      - name: Resolve WHISPER_MODEL build-arg
-        id: resolve
-        # Map the tag-safe matrix alias to the actual model identifier passed
-        # to faster_whisper. Most models are identical to their alias; HF-hosted
-        # models that contain characters illegal in Docker tags must be mapped here.
+      - name: Get base image references
+        id: get-refs
         run: |
-          case "${{ matrix.model }}" in
-            breeze-asr-26) WHISPER_MODEL="paulpengtw/faster-whisper-Breeze-ASR-26" ;;
-            *) WHISPER_MODEL="${{ matrix.model }}" ;;
-          esac
-          echo "whisper_model=${WHISPER_MODEL}" >> "$GITHUB_OUTPUT"
-
-      - name: Get no_model digest from triggering workflow
-        id: get-base-digest
-        run: |
-          # Get the triggering workflow run information
-          WORKFLOW_RUN_ID="${{ github.event.workflow_run.id }}"
-          
-          # Get the no_model digest from the artifacts or outputs
-          # For now, we'll use the latest no_model image with the same commit SHA
+          # Get the commit SHA from the triggering workflow
           COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
           SHORT_SHA=$(echo $COMMIT_SHA | cut -c 1-7)
-          
-          # Use the no_model image with short SHA tag
-          NO_MODEL_IMAGE="ghcr.io/jim60105/whisperx:no_model-$SHORT_SHA"
-          echo "no_model_image=$NO_MODEL_IMAGE" >> $GITHUB_OUTPUT
 
-      - name: Build and push by digest (cache-${{ matrix.model }})
+          # Set image references
+          NO_MODEL_IMAGE="ghcr.io/jim60105/whisperx:no_model-$SHORT_SHA"
+          CACHE_IMAGE="ghcr.io/jim60105/whisperx:cache-${{ env.MODEL_ALIAS }}-$SHORT_SHA"
+
+          echo "no_model_image=$NO_MODEL_IMAGE" >> $GITHUB_OUTPUT
+          echo "cache_image=$CACHE_IMAGE" >> $GITHUB_OUTPUT
+
+      - name: Build and push by digest (${{ env.MODEL_ALIAS }}-${{ env.LANG_CODE }})
         uses: docker/build-push-action@v7
         id: build
         with:
           context: .
           file: ./Dockerfile
-          target: load_whisper
+          target: final
           platforms: ${{ matrix.platform }}
           labels: ${{ steps.setup.outputs.labels }}
           build-args: |
-            WHISPER_MODEL=${{ steps.resolve.outputs.whisper_model }}
-            NO_MODEL_STAGE=${{ steps.get-base-digest.outputs.no_model_image }}
+            WHISPER_MODEL=${{ env.WHISPER_MODEL_ID }}
+            LANG=${{ env.LANG_CODE }}
+            LOAD_WHISPER_STAGE=${{ steps.get-refs.outputs.cache_image }}
+            NO_MODEL_STAGE=${{ steps.get-refs.outputs.no_model_image }}
             VERSION=${{ github.event.workflow_run.head_sha }}
             RELEASE=${{ github.event.workflow_run.run_number }}
-          cache-from: |
-            type=registry,ref=ghcr.io/${{ env.REGISTRY_IMAGE }}:cache-model-${{ matrix.model }}
-          cache-to: |
-            type=registry,ref=ghcr.io/${{ env.REGISTRY_IMAGE }}:cache-model-${{ matrix.model }},mode=max
           outputs: |
             type=image,name=ghcr.io/${{ env.REGISTRY_IMAGE }},push-by-digest=true,name-canonical=true,push=true
           sbom: true
@@ -116,29 +97,18 @@ jobs:
       - name: Upload digest
         uses: actions/upload-artifact@v7
         with:
-          name: digests-cache-${{ matrix.model }}-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }}
+          name: digests-breeze-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }}
           path: /tmp/digests/*
           if-no-files-found: error
           retention-days: 1
 
-  # Test model cache builds by pulling from registry
-  test_cache:
+  # Test breeze-asr-26-zh builds by pulling from registry
+  test_breeze:
     runs-on: ${{ matrix.runner }}
-    needs: build_cache
+    needs: build_breeze
     strategy:
       fail-fast: false
       matrix:
-        model:
-          - tiny
-          - base
-          - small
-          - medium
-          - large-v3
-          - distil-large-v3
-          - breeze-asr-26
-        platform:
-          - linux/amd64
-          - linux/arm64
         include:
           - platform: linux/amd64
             runner: ubuntu-latest
@@ -153,7 +123,7 @@ jobs:
       - name: Download digests
         uses: actions/download-artifact@v8
         with:
-          name: digests-cache-${{ matrix.model }}-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }}
+          name: digests-breeze-${{ matrix.platform == 'linux/amd64' && 'linux-amd64' || 'linux-arm64' }}
           path: /tmp/digests
 
       - name: Setup Docker Buildx
@@ -166,50 +136,38 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Test pull cache-${{ matrix.model }} image
+      - name: Test pull ${{ env.MODEL_ALIAS }}-${{ env.LANG_CODE }} image
         run: |
           cd /tmp/digests
           digest=$(cat linux-*)
-          echo "Testing pull of cache-${{ matrix.model }} for platform ${{ matrix.platform }}"
+          echo "Testing pull of ${{ env.MODEL_ALIAS }}-${{ env.LANG_CODE }} for platform ${{ matrix.platform }}"
           docker pull --platform ${{ matrix.platform }} ghcr.io/${{ env.REGISTRY_IMAGE }}@sha256:$digest
-          echo "Successfully pulled cache-${{ matrix.model }} image for ${{ matrix.platform }}"
+          echo "Successfully pulled ${{ env.MODEL_ALIAS }}-${{ env.LANG_CODE }} image for ${{ matrix.platform }}"
 
-  # Merge all platform builds into manifest list for each model cache
-  merge_cache:
+  # Merge all platform builds into manifest list
+  merge_breeze:
     runs-on: ubuntu-latest
-    needs: test_cache
-    strategy:
-      matrix:
-        model:
-          - tiny
-          - base
-          - small
-          - medium
-          - large-v3
-          - distil-large-v3
-          - breeze-asr-26
+    needs: test_breeze
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-        with:
-          submodules: true
 
       - name: Download digests
         uses: actions/download-artifact@v8
         with:
           path: /tmp/digests
-          pattern: digests-cache-${{ matrix.model }}-*
+          pattern: digests-breeze-*
           merge-multiple: true
 
       - name: Setup docker
         id: setup
         uses: ./.github/workflows/docker-reused-steps
         with:
-          tag: cache-${{ matrix.model }}
+          tag: ${{ env.MODEL_ALIAS }}-${{ env.LANG_CODE }}
 
       - name: Create GHCR manifest list
         run: |
-          echo "Creating manifest list for cache-${{ matrix.model }}..."
+          echo "Creating manifest list for ${{ env.MODEL_ALIAS }}-${{ env.LANG_CODE }}..."
           cd /tmp/digests
           echo "Files in /tmp/digests:"
           ls -la
@@ -243,7 +201,7 @@ jobs:
           echo "Extracted digest: $DIGEST"
           echo "manifest_digest=$DIGEST" >> $GITHUB_OUTPUT
 
-      - name: Attest GHCR image (cache-${{ matrix.model }})
+      - name: Attest GHCR image (${{ env.MODEL_ALIAS }}-${{ env.LANG_CODE }})
         uses: actions/attest-build-provenance@v4
         with:
           subject-name: ghcr.io/${{ github.repository_owner }}/whisperx

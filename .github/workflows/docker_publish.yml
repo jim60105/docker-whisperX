@@ -5,7 +5,7 @@
 # This workflow has been refactored to trigger a sequence of specialized workflows:
 # 1. 01-build-base-images.yml - Builds no_model base images
 # 2. 02-build-model-cache.yml - Builds model cache images (6 models)
-# 3. 03-build-distil-en.yml + 04-build-matrix-images.yml - Parallel builds of final images
+# 3. 03-build-distil-en.yml + 04-build-matrix-images.yml + 05-build-breeze-zh.yml - Parallel builds of final images
 name: docker_publish
 
 on:
@@ -49,6 +49,7 @@ jobs:
           echo "2. 02-build-model-cache.yml - Model cache images (6 models)"
           echo "3. 03-build-distil-en.yml - Distil English model (parallel)"
           echo "4. 04-build-matrix-images.yml - Full matrix build + tests (parallel)"
+          echo "5. 05-build-breeze-zh.yml - Breeze-ASR-26 Chinese model (parallel)"
           echo ""
           echo "Total expected images: ~175+"
           echo "=== Build Chain Ready ==="

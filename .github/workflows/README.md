@@ -17,6 +17,8 @@ graph TD
     C -->|merge_model| D
     C -->|build_model| E[04-build-matrix-images.yml]
     C -->|merge_model| E
+    C -->|build_model| H[05-build-breeze-zh.yml]
+    C -->|merge_model| H
     E -->|build_matrix| F[test-matrix]
     E -->|merge_matrix| G[test-large-v3-zh]
     
@@ -68,7 +70,7 @@ graph TD
 - **Models**: tiny, base, small, medium, large-v3
 - **Platforms**: Native builds on linux/amd64 + linux/arm64
 - **Dependencies**: Uses base images from previous workflow
-- **Next**: Triggers both `03-build-distil-en.yml` and `04-build-matrix-images.yml` in parallel
+- **Next**: Triggers `03-build-distil-en.yml`, `04-build-matrix-images.yml`, and `05-build-breeze-zh.yml` in parallel
 
 ### 4. `03-build-distil-en.yml`
 - **Purpose**: Build distil-large-v3-en specialized image with distributed multi-platform architecture
@@ -80,7 +82,7 @@ graph TD
   - `merge_distil`: Create manifest list for multi-platform distil image
 - **Platforms**: Native builds on linux/amd64 + linux/arm64
 - **Specialization**: English-optimized distil model with enhanced performance
-- **Parallel with**: `04-build-matrix-images.yml`
+- **Parallel with**: `04-build-matrix-images.yml`, `05-build-breeze-zh.yml`
 
 ### 5. `04-build-matrix-images.yml`
 - **Purpose**: Build full image matrix with massive-scale distributed multi-platform architecture
@@ -96,7 +98,19 @@ graph TD
 - **Languages**: 37 supported languages with alignment models
 - **Models**: tiny, base, small, medium, large-v3
 - **Innovation**: Selective testing strategy to manage massive resource usage
-- **Parallel with**: `03-build-distil-en.yml`
+- **Parallel with**: `03-build-distil-en.yml`, `05-build-breeze-zh.yml`
+
+### 6. `05-build-breeze-zh.yml`
+- **Purpose**: Build the `paulpengtw/faster-whisper-Breeze-ASR-26` Chinese (zh) specialized image with distributed multi-platform architecture
+- **Triggered by**: `02-build-model-cache.yml`
+- **Architecture**: Three-stage distributed build process (mirrors `03-build-distil-en.yml`)
+- **Jobs**:
+  - `build_breeze`: 2 parallel platform-specific builds (1 model × 2 platforms)
+  - `test_breeze`: Pull-based smoke test on both platforms
+  - `merge_breeze`: Create manifest list for multi-platform image
+- **Platforms**: Native builds on linux/amd64 + linux/arm64
+- **Specialization**: Chinese-optimized Breeze-ASR-26 fine-tune (alias `breeze-asr-26`)
+- **Parallel with**: `03-build-distil-en.yml`, `04-build-matrix-images.yml`
 
 ## Key Features
 
@@ -183,10 +197,11 @@ Each workflow implements a consistent three-stage pattern:
 | Workflow   | Images | Platforms | Platform Builds | Test Jobs | Merge Jobs | Other | **Total Jobs** |
 |------------|--------|-----------|----------------|-----------|------------|-------|---------------|
 | 01-base    | 2      | 2         | 4              | 2         | 2          | 0     | 8             |
-| 02-model   | 6      | 2         | 12             | 12        | 6          | 0     | 30            |
+| 02-model   | 7      | 2         | 14             | 14        | 7          | 0     | 35            |
 | 03-distil  | 1      | 2         | 2              | 2         | 1          | 0     | 5             |
 | 04-matrix  | 185    | 2         | 370            | 2         | 185        | 1     | 558           |
-| **Total**  | **194**| **2**     | **388**        | **18**    | **194**    | **1** | **601**       |
+| 05-breeze  | 1      | 2         | 2              | 2         | 1          | 0     | 5             |
+| **Total**  | **196**| **2**     | **392**        | **22**    | **196**    | **1** | **611**       |
 
 ### Resource Optimization Strategies
 
