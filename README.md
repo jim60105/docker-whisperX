@@ -53,8 +53,19 @@ You can find the actual build matrix in [04-build-matrix-images.yml](.github/wor
 
 In addition, there is also a `no_model` tag that does not include any pre-downloaded models, also referred to as `latest`.
 
-> Added a `distil-large-v3-en` model.  
-> Only en, distil model seems to only support English.
+### `distil-large-v3-en` model
+
+A distilled variant of `large-v3` published by HuggingFace as [`distil-whisper/distil-large-v3`](https://huggingface.co/distil-whisper/distil-large-v3). At 756M parameters it is roughly half the size of openai `large-v3` (1550M, ~51% smaller) and **6.3× faster** in relative latency while still landing **within 1% WER of `large-v3` on long-form audio** under both sequential and chunked transcription algorithms — a strong default for English-only batch workloads.
+
+Only the English (`en`) language pairing is published since distil-whisper models are English-only by design. Pull it with `ghcr.io/jim60105/whisperx:distil-large-v3-en`.
+
+### `breeze-asr-26-zh` model
+
+A Taiwanese Hokkien (Taigi / 台語) ASR model published by MediaTek Research as [`MediaTek-Research/Breeze-ASR-26`](https://huggingface.co/MediaTek-Research/Breeze-ASR-26) and re-packaged for `faster-whisper` runtime by [`paulpengtw/faster-whisper-Breeze-ASR-26`](https://huggingface.co/paulpengtw/faster-whisper-Breeze-ASR-26). The model is fine-tuned from Whisper on ~10,000 hours of synthetic Taigi speech (including Taigi/Mandarin code-switching) and transcribes spoken Taigi into **Mandarin Chinese characters**, leveraging the substantial lexical overlap between the two languages for a pragmatic, reproducible benchmarking workflow.
+
+Because the output script is Mandarin, this image is shipped under the `zh` language pairing. Pull it with `ghcr.io/jim60105/whisperx:breeze-asr-26-zh`.
+
+> Note: when transcribing genuine Taigi (台語) audio, phoneme-level alignment will not work — the bundled `zh` wav2vec2 alignment model is trained on Mandarin phonology and cannot reliably align Taigi pronunciations against the model's Mandarin-character output. Pass `--no_align` to skip the alignment pass for Taigi input, e.g. `docker run ... ghcr.io/jim60105/whisperx:breeze-asr-26-zh -- --no_align audio.mp3`.
 
 ## ⚡️ Preserve the download cache for the align models when working with various languages
 
