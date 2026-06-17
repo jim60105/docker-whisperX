@@ -162,7 +162,7 @@ COPY --link --chown=$UID:0 --chmod=775 --from=build /venv /venv
 
 ENV PATH="/venv/bin${PATH:+:${PATH}}"
 ENV PYTHONPATH="/venv/lib/python3.11/site-packages"
-ENV LD_LIBRARY_PATH="/lib/x86_64-linux-gnu:/lib/aarch64-linux-gnu:/venv/lib/python3.11/site-packages/nvidia/cudnn/lib:/venv/lib/python3.11/site-packages/torch/lib:${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+ENV LD_LIBRARY_PATH="/lib/x86_64-linux-gnu:/lib/aarch64-linux-gnu:/venv/lib/python3.11/site-packages/nvidia/cudnn/lib:/venv/lib/python3.11/site-packages/torch/lib"
 
 # Test whisperX
 RUN python3 -c 'import whisperx;' && \
