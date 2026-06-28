@@ -21,7 +21,7 @@ ARG HF_HOME=${CACHE_HOME}/huggingface
 ########################################
 # Base stage for amd64
 ########################################
-FROM docker.io/library/python:3.11-slim AS prepare_base_amd64
+FROM docker.io/library/python:3.13-slim AS prepare_base_amd64
 
 # RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
 ARG TARGETARCH
@@ -43,7 +43,7 @@ RUN --mount=type=cache,id=apt-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/v
 ########################################
 # Base stage for arm64
 ########################################
-FROM docker.io/library/python:3.11-slim AS prepare_base_arm64
+FROM docker.io/library/python:3.13-slim AS prepare_base_arm64
 
 # RUN mount cache for multi-arch: https://github.com/docker/buildx/issues/549#issuecomment-1788297892
 ARG TARGETARCH
@@ -80,7 +80,7 @@ ENV UV_PROJECT_ENVIRONMENT=/venv
 ENV VIRTUAL_ENV=/venv
 ENV UV_LINK_MODE=copy
 ENV UV_PYTHON_DOWNLOADS=0
-ENV UV_PYTHON=3.11
+ENV UV_PYTHON=3.13
 
 # Install curl
 RUN --mount=type=cache,id=apt-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/var/cache/apt \
@@ -116,7 +116,7 @@ RUN --mount=type=cache,id=uv-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/ro
 FROM base AS no_model
 
 # We don't need them anymore
-RUN pip3.11 uninstall -y pip wheel && \
+RUN pip3.13 uninstall -y pip wheel && \
     rm -rf /root/.cache/pip
 
 # Create user
@@ -161,8 +161,8 @@ RUN --mount=type=cache,id=apt-$TARGETARCH$TARGETVARIANT,sharing=locked,target=/v
 COPY --link --chown=$UID:0 --chmod=775 --from=build /venv /venv
 
 ENV PATH="/venv/bin${PATH:+:${PATH}}"
-ENV PYTHONPATH="/venv/lib/python3.11/site-packages"
-ENV LD_LIBRARY_PATH="/lib/x86_64-linux-gnu:/lib/aarch64-linux-gnu:/venv/lib/python3.11/site-packages/nvidia/cudnn/lib:/venv/lib/python3.11/site-packages/torch/lib"
+ENV PYTHONPATH="/venv/lib/python3.13/site-packages"
+ENV LD_LIBRARY_PATH="/lib/x86_64-linux-gnu:/lib/aarch64-linux-gnu:/venv/lib/python3.13/site-packages/nvidia/cudnn/lib:/venv/lib/python3.13/site-packages/torch/lib"
 
 # Test whisperX
 RUN python3 -c 'import whisperx;' && \
